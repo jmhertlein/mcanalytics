@@ -16,18 +16,23 @@
  */
 package net.jmhertlein.mcanalytics.api;
 
+import java.io.EOFException;
+import net.jmhertlein.mcanalytics.api.request.Request;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.jmhertlein.mcanalytics.api.request.OnlinePlayerCountRequest;
 import org.json.JSONObject;
 
 /**
@@ -72,8 +77,8 @@ public class APISocket {
             JSONObject read;
             try {
                 read = new JSONObject(in.readUTF());
-                System.out.println("CLIENT: APISocket read some input.");
-            } catch(SocketException ex) {
+                System.out.println("CLIENT: APISocket read some input: " + read.toString());
+            } catch(SocketException | EOFException ex) {
                 System.out.println("Socket closed (" + ex.getLocalizedMessage() + ").");
                 return;
             } catch(IOException ex) {
@@ -82,11 +87,41 @@ public class APISocket {
             }
 
             if(read.has("response_to")) {
+                System.out.println("was a response");
                 long id = read.getLong("response_to");
                 FutureRequest<?> r = requests.remove(id);
+                System.out.print("Got r...");
                 r.setResponse(read);
+                System.out.println("Set response, started running async.");
                 workers.submit(r);
             }
+        }
+    }
+
+    public static void main(String... args) throws IOException {
+        Socket s = new Socket("localhost", 35555);
+
+        ObjectOutputStream out;
+        ObjectInputStream in;
+
+        try {
+            out = new ObjectOutputStream(s.getOutputStream());
+            in = new ObjectInputStream(s.getInputStream());
+        } catch(IOException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        APISocket api = new APISocket(out, in);
+
+        api.startListener();
+
+        FutureRequest<Integer> result = api.submit(new OnlinePlayerCountRequest());
+
+        try {
+            System.out.println("RESULT IS: " + result.get());
+        } catch(InterruptedException | ExecutionException ex) {
+            Logger.getLogger(APISocket.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

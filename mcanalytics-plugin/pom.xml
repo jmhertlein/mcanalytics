@@ -14,6 +14,25 @@
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
       <version>1.8-R0.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jmhertlein</groupId>
+      <artifactId>reflective</artifactId>
+      <version>1.0-RC</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jmhertlein</groupId>
+      <artifactId>mcanalytics-api</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20141113</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
@@ -21,6 +40,10 @@
     <repository>
       <id>spigot-nexus-snaps</id>
       <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+    </repository>
+    <repository>
+      <id>jmh-repo</id>
+      <url>http://maven.jmhertlein.net/~joshua/maven/</url>
     </repository>
 
   </repositories>

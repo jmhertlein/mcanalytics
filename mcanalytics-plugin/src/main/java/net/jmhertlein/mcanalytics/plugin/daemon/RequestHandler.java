@@ -14,39 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.api;
+package net.jmhertlein.mcanalytics.plugin.daemon;
 
-import net.jmhertlein.mcanalytics.api.request.Request;
-import java.util.concurrent.FutureTask;
 import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public class FutureRequest<T> extends FutureTask<T> {
-    private long requestID;
-    private final Request<T> request;
+public abstract class RequestHandler implements Runnable {
+    private final RequestDispatcher dispatcher;
+    private final long responseID;
 
-    public FutureRequest(Request<T> p) {
-        super(p);
-        this.request = p;
+    public RequestHandler(RequestDispatcher d, long sourceID) {
+        this.dispatcher = d;
+        this.responseID = sourceID;
     }
 
-    public long getRequestID() {
-        return requestID;
+    public long getResponseID() {
+        return responseID;
     }
 
-    public void setRequestID(long requestID) {
-        request.setRequestID(requestID);
+    public void respond(JSONObject o) {
+        dispatcher.queueResponse(o);
     }
-
-    public String toJSON() {
-        return request.toJSON();
-    }
-
-    public void setResponse(JSONObject o) {
-        request.setResponse(o);
-    }
-
 }
