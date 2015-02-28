@@ -1,0 +1,76 @@
+MCAnalytics is a Bukkit/Spigot plugin and a JavaFX console that allows you to view statistics, charts, and other data about player activity on your Minecraft SMP server.
+
+Offers:
+
+logins today
+unique logins today
+first-logins today
+bounced logins (first-login session < x mins and/or user did not relog)
+avg play session length, per day of week (bar graph)
+hourly player counts in date range (line graph)
+# new players per day in date range (line graph)
+# of total new player joins for each hour (bar graph)
+add option to exclude staff from counts
+
+Authentication: client and server communicate w/ TLS. Server admin uses plugin command to generate access tokens that correspond with a username. The user can then log in with the access token and set their password.
+
+Protocol: client and server communicate by passing JSON objects around. The GUI will use a socket-wrapper function to send requests to the server by passing a RunnableFuture to it. When data is sent back (even if it's just an OK signal), it will be injected into the RunnableFuture and its run() method will be called. One of the fields in the JSON hashes will be "response_to" with an id of the packet it was responding to. This will be used to find the request object and pass it the JSON object. Then when the request object is done run()ing, the GUI will know because its get() method will unblock.
+
+client does:
+
+socketWrapper.submit(packet);
+
+submit(): handles sending the packet over the wire, and calling the Runnable once it's received the server's response (even if it's just an OK). 
+
+I need to make a FutureRunnable subclass for each type of packet. Initialize this special futurerunnable with arguments (if any). You then pass this special FutureRunnable to the submit() method. The submit method is able to map a packetId to this FutureRunnable, then call its getJSON() method to get the String to send over the wire. When a packet with the response_to field set to the id that was mapped to the initial packet, then that JSONObject is passed to the FutureRunnable and it is executed.
+
+Meanwhile, the GUI can call isDone(), getProgress(), etc on the Future to determine if it's done. This can be done from a JFX Task if need be. 
+
+public class Request<V> extends RunnableFuture<V> {
+    setRequestID()
+    toJSON()
+    setResponse() // for injecting the server's response
+}
+
+public class HourlyPlayerCountRequest extends Request<LinkedMap> {
+    run() {
+      for(String date : json.get("dates")) {
+        ret.put(date, json.get("dates." + date));
+      }
+
+      return ret;
+    }
+}
+
+the GUI will do this:
+
+HourlyPlayerCountRequest req = new HPCR(start, end);
+submit(req);
+
+//maybe use Task for this?
+//start progress bar
+LinkedMap<DateTime, Integer> data = req.get(); //blocks here
+//stop bar
+//do shit
+
+and submit will do...
+
+public void submit(Request<?> r) {
+    r.setRequestID(nextID);
+    nextID++;
+    socket.write(r.toJSON());
+    callbacks.put(r.getActionID(), r);
+}
+
+then when we're reading shit from the stream and...
+
+JSONObject o = socket.read();
+
+if(o.has("response_to")) {
+  Request<?> r = callbacks.get(o.get("response_to"));
+  r.setResponse(o);
+
+  Exector.execute(r); //call r.run()
+}
+
+then when r.run() is done, the GUI will see isDone() and be able to update its side by doing stuff.
