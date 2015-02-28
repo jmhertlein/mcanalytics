@@ -1,0 +1,1 @@
+Source of MCAnalytics can be found at: https://github.com/jmhertlein/mcanalytics
