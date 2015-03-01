@@ -25,8 +25,8 @@ import org.json.JSONObject;
  */
 public class OnlinePlayerCountRequestHandler extends RequestHandler {
 
-    public OnlinePlayerCountRequestHandler(RequestDispatcher d, long id) {
-        super(d, id);
+    public OnlinePlayerCountRequestHandler(RequestDispatcher d, JSONObject req) {
+        super(d, req);
     }
 
     @Override

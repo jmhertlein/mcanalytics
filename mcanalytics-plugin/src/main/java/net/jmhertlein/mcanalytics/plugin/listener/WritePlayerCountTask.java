@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
-import net.jmhertlein.mcanalytics.plugin.Statement;
+import net.jmhertlein.mcanalytics.plugin.Statements;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -43,7 +43,7 @@ public class WritePlayerCountTask extends BukkitRunnable {
         this.p = p;
         try {
             this.c = ds.getConnection();
-            addNewCount = c.prepareStatement(Statement.ADD_HOURLY_PLAYER_COUNT.toString());
+            addNewCount = c.prepareStatement(Statements.ADD_HOURLY_PLAYER_COUNT.toString());
         } catch(SQLException ex) {
             Logger.getLogger(WritePlayerCountTask.class.getName()).log(Level.SEVERE, null, ex);
         }

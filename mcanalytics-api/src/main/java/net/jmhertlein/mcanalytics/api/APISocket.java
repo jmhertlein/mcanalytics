@@ -23,6 +23,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -30,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.jmhertlein.mcanalytics.api.request.OnlinePlayerCountRequest;
+import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
 import org.json.JSONObject;
 
 /**
@@ -114,12 +116,18 @@ public class APISocket {
 
         api.startListener();
 
-        FutureRequest<Integer> result = api.submit(new OnlinePlayerCountRequest());
+        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> result = api.submit(new PastOnlinePlayerCountRequest(LocalDateTime.now().minusDays(10), LocalDateTime.now().plusDays(10)));
 
         try {
-            System.out.println("RESULT IS: " + result.get());
+            System.out.println("RESULT IS: ");
+            Map<LocalDateTime, Integer> m = result.get();
+            for(Map.Entry<LocalDateTime, Integer> e : m.entrySet()) {
+                System.out.println(e.getKey().toString() + " | " + e.getValue());
+            }
         } catch(InterruptedException | ExecutionException ex) {
             Logger.getLogger(APISocket.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        System.out.println("DONE");
     }
 }

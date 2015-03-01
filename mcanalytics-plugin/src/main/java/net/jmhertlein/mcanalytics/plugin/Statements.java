@@ -20,13 +20,14 @@ package net.jmhertlein.mcanalytics.plugin;
  *
  * @author joshua
  */
-public enum Statement {
+public enum Statements {
     CREATE_HOURLY_PLAYER_COUNT("CREATE TABLE IF NOT EXISTS HourlyPlayerCount(instant DATETIME, count INTEGER);"),
-    ADD_HOURLY_PLAYER_COUNT("INSERT INTO HourlyPlayerCount VALUES(?, ?);");
+    ADD_HOURLY_PLAYER_COUNT("INSERT INTO HourlyPlayerCount VALUES(?, ?);"),
+    GET_HOURLY_PLAYER_COUNTS("SELECT * FROM HourlyPlayerCount WHERE instant BETWEEN ? AND ?;");
 
     private final String sql;
 
-    Statement(String sql) {
+    Statements(String sql) {
         this.sql = sql;
     }
 

@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 import org.json.JSONObject;
 
 /**
@@ -37,10 +38,10 @@ public class ClientMonitor implements Runnable {
     private final ExecutorService workers;
     private final RequestDispatcher dispatcher;
 
-    public ClientMonitor(ExecutorService workers, Socket client) {
+    public ClientMonitor(DataSource connections, ExecutorService workers, Socket client) {
         this.client = client;
         this.workers = workers;
-        dispatcher = new RequestDispatcher(workers);
+        dispatcher = new RequestDispatcher(connections, workers);
     }
 
     @Override
@@ -84,14 +85,18 @@ public class ClientMonitor implements Runnable {
         for(;;) {
             JSONObject o;
             try {
-                o = new JSONObject(in.readUTF());
+                String s = in.readUTF();
+                o = new JSONObject(s);
             } catch(SocketException | EOFException se) {
                 return;
             } catch(IOException ex) {
                 Logger.getLogger(ClientMonitor.class.getName()).log(Level.SEVERE, null, ex);
                 continue;
+            } catch(Throwable t) {
+                t.printStackTrace();
+                System.out.println(t.getLocalizedMessage());
+                continue;
             }
-            System.out.println("SERVER: Got this: " + o.toString());
             dispatcher.submitJob(o);
         }
     }

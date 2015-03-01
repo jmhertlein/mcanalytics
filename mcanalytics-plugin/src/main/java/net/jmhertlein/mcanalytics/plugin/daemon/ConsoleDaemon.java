@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 /**
  *
@@ -33,9 +34,11 @@ public class ConsoleDaemon {
     private static final int PORT = 35555;
     private final ExecutorService workers;
     private ServerSocket s;
+    private final DataSource connections;
 
-    public ConsoleDaemon() {
+    public ConsoleDaemon(DataSource connections) {
         workers = Executors.newCachedThreadPool();
+        this.connections = connections;
     }
 
     public void startListening() {
@@ -51,10 +54,8 @@ public class ConsoleDaemon {
 
         for(;;) {
             Socket client;
-            System.out.println("Listening on port " + PORT);
             try {
                 client = s.accept();
-                System.out.println("Got client.");
             } catch(SocketException ex) {
                 System.out.println("Server port listen socket closed: " + ex.getLocalizedMessage());
                 return;
@@ -62,13 +63,7 @@ public class ConsoleDaemon {
                 Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
                 continue;
             }
-            workers.submit(new ClientMonitor(workers, client));
+            workers.submit(new ClientMonitor(connections, workers, client));
         }
-    }
-
-    public static void main(String... args) {
-        ConsoleDaemon d = new ConsoleDaemon();
-
-        d.startListening();
     }
 }

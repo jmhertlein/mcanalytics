@@ -103,7 +103,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         try {
             Connection conn = connections.getConnection();
             java.sql.Statement s = conn.createStatement();
-            s.execute(Statement.CREATE_HOURLY_PLAYER_COUNT.toString());
+            s.execute(Statements.CREATE_HOURLY_PLAYER_COUNT.toString());
             s.close();
             conn.close();
         } catch(SQLException ex) {
@@ -113,7 +113,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     }
 
     private void startConsoleDaemon() {
-        d = new ConsoleDaemon();
+        d = new ConsoleDaemon(connections);
         d.startListening();
     }
 

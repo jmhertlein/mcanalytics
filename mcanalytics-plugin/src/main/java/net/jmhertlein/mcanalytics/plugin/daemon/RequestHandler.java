@@ -24,15 +24,19 @@ import org.json.JSONObject;
  */
 public abstract class RequestHandler implements Runnable {
     private final RequestDispatcher dispatcher;
-    private final long responseID;
+    private final JSONObject req;
 
-    public RequestHandler(RequestDispatcher d, long sourceID) {
+    public RequestHandler(RequestDispatcher d, JSONObject req) {
         this.dispatcher = d;
-        this.responseID = sourceID;
+        this.req = req;
     }
 
     public long getResponseID() {
-        return responseID;
+        return req.getLong("id");
+    }
+
+    public JSONObject getReq() {
+        return req;
     }
 
     public void respond(JSONObject o) {

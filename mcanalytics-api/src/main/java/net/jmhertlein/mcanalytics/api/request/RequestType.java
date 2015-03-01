@@ -21,7 +21,8 @@ package net.jmhertlein.mcanalytics.api.request;
  * @author joshua
  */
 public enum RequestType {
-    ONLINE_PLAYER_COUNT;
+    ONLINE_PLAYER_COUNT,
+    PAST_ONLINE_PLAYER_COUNT;
 
     @Override
     public String toString() {
