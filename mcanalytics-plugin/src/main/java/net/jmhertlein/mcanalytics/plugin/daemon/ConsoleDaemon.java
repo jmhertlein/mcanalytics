@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  */
 public class ConsoleDaemon {
     private static final int PORT = 35555;
-    private ExecutorService workers;
+    private final ExecutorService workers;
     private ServerSocket s;
 
     public ConsoleDaemon() {

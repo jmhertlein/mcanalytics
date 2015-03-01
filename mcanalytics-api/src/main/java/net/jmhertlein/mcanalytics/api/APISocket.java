@@ -23,13 +23,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.jmhertlein.mcanalytics.api.request.OnlinePlayerCountRequest;
@@ -42,9 +40,9 @@ import org.json.JSONObject;
 public class APISocket {
     private final Map<Long, FutureRequest<?>> requests;
     private long nextID;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
-    private ExecutorService workers;
+    private final ObjectOutputStream out;
+    private final ObjectInputStream in;
+    private final ExecutorService workers;
 
     public APISocket(ObjectOutputStream out, ObjectInputStream in) {
         nextID = 0;
