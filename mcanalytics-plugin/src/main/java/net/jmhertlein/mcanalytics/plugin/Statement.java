@@ -14,20 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.api.request;
-
-import java.util.concurrent.Callable;
-import org.json.JSONObject;
+package net.jmhertlein.mcanalytics.plugin;
 
 /**
  *
  * @author joshua
  */
-public interface Request<T> extends Callable<T> {
+public enum Statement {
+    CREATE_HOURLY_PLAYER_COUNT("CREATE TABLE IF NOT EXISTS HourlyPlayerCount(instant DATETIME, count INTEGER);"),
+    ADD_HOURLY_PLAYER_COUNT("INSERT INTO HourlyPlayerCount VALUES(?, ?);");
 
-    public String toJSON();
+    private final String sql;
 
-    public void setResponse(JSONObject json);
+    Statement(String sql) {
+        this.sql = sql;
+    }
 
-    public void setRequestID(long requestID);
+    @Override
+    public String toString() {
+        return sql;
+    }
+
 }

@@ -14,20 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.api.request;
+package net.jmhertlein.mcanalytics.plugin.listener;
 
-import java.util.concurrent.Callable;
-import org.json.JSONObject;
+import java.time.LocalTime;
+import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
+import org.bukkit.Bukkit;
 
 /**
  *
  * @author joshua
  */
-public interface Request<T> extends Callable<T> {
-
-    public String toJSON();
-
-    public void setResponse(JSONObject json);
-
-    public void setRequestID(long requestID);
+public class PlayerListener {
 }
