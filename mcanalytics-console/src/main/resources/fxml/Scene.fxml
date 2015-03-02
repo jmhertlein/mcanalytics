@@ -8,7 +8,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
+<GridPane prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.jmhertlein.mcanalytics.console.SceneController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -18,32 +18,25 @@
     <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="362.0" vgrow="ALWAYS" />
   </rowConstraints>
   <children>
-    <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
+    <ChoiceBox fx:id="chartChooser" prefWidth="150.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT">
       <GridPane.margin>
         <Insets right="5.0" top="5.0" />
       </GridPane.margin>
     </ChoiceBox>
-    <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1">
-      <center>
-        <LineChart maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" BorderPane.alignment="CENTER">
-          <xAxis>
-            <CategoryAxis side="BOTTOM" />
-          </xAxis>
-          <yAxis>
-            <NumberAxis maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" side="LEFT">
-            </NumberAxis>
-          </yAxis>
-        </LineChart>
-      </center>
-    </BorderPane>
+    <BorderPane fx:id="chartPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
     <HBox GridPane.halignment="LEFT" GridPane.hgrow="SOMETIMES" GridPane.vgrow="NEVER">
       <children>
-        <DatePicker promptText="Start" />
-        <DatePicker promptText="End">
+        <DatePicker fx:id="startDatePicker" maxWidth="100.0" promptText="Start" />
+        <DatePicker fx:id="endDatePicker" prefHeight="25.0" prefWidth="100.0" promptText="End">
           <HBox.margin>
             <Insets left="5.0" />
           </HBox.margin>
         </DatePicker>
+        <Button fx:id="searchButton" mnemonicParsing="false" onAction="#onSearch" text="Search">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </Button>
       </children>
       <GridPane.margin>
         <Insets left="5.0" top="5.0" />

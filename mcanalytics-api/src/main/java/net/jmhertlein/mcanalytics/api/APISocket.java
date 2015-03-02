@@ -60,10 +60,8 @@ public class APISocket {
         requests.put(nextID, r);
         nextID++;
 
-        System.out.println("CLIENT: Writing...");
         out.writeUTF(r.toJSON());
         out.flush();
-        System.out.println("CLIENT: Written!");
 
         return r;
     }
@@ -77,7 +75,6 @@ public class APISocket {
             JSONObject read;
             try {
                 read = new JSONObject(in.readUTF());
-                System.out.println("CLIENT: APISocket read some input: " + read.toString());
             } catch(SocketException | EOFException ex) {
                 System.out.println("Socket closed (" + ex.getLocalizedMessage() + ").");
                 return;
@@ -87,47 +84,11 @@ public class APISocket {
             }
 
             if(read.has("response_to")) {
-                System.out.println("was a response");
                 long id = read.getLong("response_to");
                 FutureRequest<?> r = requests.remove(id);
-                System.out.print("Got r...");
                 r.setResponse(read);
-                System.out.println("Set response, started running async.");
                 workers.submit(r);
             }
         }
-    }
-
-    public static void main(String... args) throws IOException {
-        Socket s = new Socket("localhost", 35555);
-
-        ObjectOutputStream out;
-        ObjectInputStream in;
-
-        try {
-            out = new ObjectOutputStream(s.getOutputStream());
-            in = new ObjectInputStream(s.getInputStream());
-        } catch(IOException ex) {
-            ex.printStackTrace();
-            return;
-        }
-
-        APISocket api = new APISocket(out, in);
-
-        api.startListener();
-
-        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> result = api.submit(new PastOnlinePlayerCountRequest(LocalDateTime.now().minusDays(10), LocalDateTime.now().plusDays(10)));
-
-        try {
-            System.out.println("RESULT IS: ");
-            Map<LocalDateTime, Integer> m = result.get();
-            for(Map.Entry<LocalDateTime, Integer> e : m.entrySet()) {
-                System.out.println(e.getKey().toString() + " | " + e.getValue());
-            }
-        } catch(InterruptedException | ExecutionException ex) {
-            Logger.getLogger(APISocket.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        System.out.println("DONE");
     }
 }
