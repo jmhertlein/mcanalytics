@@ -21,33 +21,42 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.Statements;
-import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 /**
  *
  * @author joshua
  */
-public class WritePlayerCountTask extends WriteTask {
-    private int players;
+public class WriteFirstLoginTask extends WriteTask {
+    private Player pl;
+    private LocalDateTime loginTime;
+    private UUID id;
+    private String name;
 
-    public WritePlayerCountTask(MCAnalyticsPlugin p, DataSource ds) {
+    public WriteFirstLoginTask(MCAnalyticsPlugin p, DataSource ds, Player pl) {
         super(p, ds);
+        this.pl = pl;
     }
 
     @Override
     public void gather() {
-        players = Bukkit.getOnlinePlayers().size();
+        loginTime = LocalDateTime.now();
+        id = pl.getUniqueId();
+        name = pl.getName();
     }
 
     @Override
     protected void write(Connection c) throws SQLException {
-        try(PreparedStatement addNewCount = c.prepareStatement(Statements.ADD_HOURLY_PLAYER_COUNT.toString())) {
-            addNewCount.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
-            addNewCount.setInt(2, players);
-            addNewCount.execute();
+        try(PreparedStatement p = c.prepareStatement(Statements.ADD_NEW_PLAYER_LOGIN.toString())) {
+            p.setTimestamp(1, Timestamp.valueOf(loginTime));
+            p.setString(2, id.toString());
+            p.setString(3, name);
+            p.execute();
         }
     }
+
 }

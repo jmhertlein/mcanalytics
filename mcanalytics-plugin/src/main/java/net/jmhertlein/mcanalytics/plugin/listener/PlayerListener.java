@@ -16,13 +16,32 @@
  */
 package net.jmhertlein.mcanalytics.plugin.listener;
 
-import java.time.LocalTime;
+import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 
 /**
  *
  * @author joshua
  */
-public class PlayerListener {
+public class PlayerListener implements Listener {
+    private final MCAnalyticsPlugin plugin;
+    private final DataSource connections;
+
+    public PlayerListener(MCAnalyticsPlugin plugin, DataSource connections) {
+        this.plugin = plugin;
+        this.connections = connections;
+    }
+
+    @EventHandler
+    public void onPlayerLogin(PlayerLoginEvent e) {
+        if(!e.getPlayer().hasPlayedBefore()) {
+            WriteFirstLoginTask f = new WriteFirstLoginTask(plugin, connections, e.getPlayer());
+            f.gather();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
+        }
+    }
 }

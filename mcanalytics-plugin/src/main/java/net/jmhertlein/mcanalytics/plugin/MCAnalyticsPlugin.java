@@ -19,7 +19,7 @@ package net.jmhertlein.mcanalytics.plugin;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutorService;
+import java.sql.Statement;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.daemon.ConsoleDaemon;
+import net.jmhertlein.mcanalytics.plugin.listener.PlayerListener;
 import net.jmhertlein.mcanalytics.plugin.listener.WritePlayerCountTask;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -46,6 +47,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         saveDefaultConfig();
         connectToDatabase();
         setupDatabase();
+        setupListeners();
         setupTimedHooks();
         startConsoleDaemon();
     }
@@ -95,17 +97,16 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     public void setupTimedHooks() {
         cron = Executors.newSingleThreadScheduledExecutor();
         cron.scheduleAtFixedRate(() -> {
-            Bukkit.getScheduler().runTask(this, new WritePlayerCountTask(this, connections));
+            WritePlayerCountTask t = new WritePlayerCountTask(this, connections);
+            t.gather();
+            Bukkit.getScheduler().runTask(this, t);
         }, 0, 1, TimeUnit.MINUTES);
     }
 
     private void setupDatabase() {
-        try {
-            Connection conn = connections.getConnection();
-            java.sql.Statement s = conn.createStatement();
+        try(Connection conn = connections.getConnection(); Statement s = conn.createStatement()) {
             s.execute(Statements.CREATE_HOURLY_PLAYER_COUNT.toString());
-            s.close();
-            conn.close();
+            s.execute(Statements.CREATE_NEW_PLAYER_LOGIN.toString());
         } catch(SQLException ex) {
             Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -115,6 +116,10 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     private void startConsoleDaemon() {
         d = new ConsoleDaemon(connections);
         d.startListening();
+    }
+
+    private void setupListeners() {
+        getServer().getPluginManager().registerEvents(new PlayerListener(this, connections), this);
     }
 
 }

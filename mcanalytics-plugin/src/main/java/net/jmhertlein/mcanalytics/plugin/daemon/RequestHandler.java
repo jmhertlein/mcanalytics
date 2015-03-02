@@ -16,7 +16,6 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
-import com.sun.media.jfxmedia.logging.Logger;
 import java.sql.SQLException;
 import org.json.JSONObject;
 

@@ -21,9 +21,11 @@ package net.jmhertlein.mcanalytics.plugin;
  * @author joshua
  */
 public enum Statements {
-    CREATE_HOURLY_PLAYER_COUNT("CREATE TABLE IF NOT EXISTS HourlyPlayerCount(instant DATETIME, count INTEGER);"),
-    ADD_HOURLY_PLAYER_COUNT("INSERT INTO HourlyPlayerCount VALUES(?, ?);"),
-    GET_HOURLY_PLAYER_COUNTS("SELECT * FROM HourlyPlayerCount WHERE instant BETWEEN ? AND ?;");
+    CREATE_HOURLY_PLAYER_COUNT("CREATE TABLE IF NOT EXISTS OnlinePlayerCount(instant DATETIME PRIMARY KEY, count INTEGER);"),
+    ADD_HOURLY_PLAYER_COUNT("INSERT INTO OnlinePlayerCount VALUES(?, ?);"),
+    GET_HOURLY_PLAYER_COUNTS("SELECT * FROM OnlinePlayerCount WHERE instant BETWEEN ? AND ?;"),
+    CREATE_NEW_PLAYER_LOGIN("CREATE TABLE IF NOT EXISTS NewPlayerLogin(date DATETIME, id VARCHAR(36) PRIMARY KEY, name VARCHAR(16), bounced BOOLEAN DEFAULT TRUE, INDEX USING BTREE(date));"),
+    ADD_NEW_PLAYER_LOGIN("INSERT INTO NewPlayerLogin VALUES(?, ?, ?, true)");
 
     private final String sql;
 

@@ -17,37 +17,37 @@
 package net.jmhertlein.mcanalytics.plugin.listener;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
-import net.jmhertlein.mcanalytics.plugin.Statements;
-import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
  * @author joshua
  */
-public class WritePlayerCountTask extends WriteTask {
-    private int players;
+public abstract class WriteTask extends BukkitRunnable {
+    private MCAnalyticsPlugin p;
+    private DataSource ds;
 
-    public WritePlayerCountTask(MCAnalyticsPlugin p, DataSource ds) {
-        super(p, ds);
+    public WriteTask(MCAnalyticsPlugin p, DataSource ds) {
+        this.p = p;
+        this.ds = ds;
     }
 
-    @Override
-    public void gather() {
-        players = Bukkit.getOnlinePlayers().size();
-    }
+    public abstract void gather();
+
+    protected abstract void write(Connection c) throws SQLException;
 
     @Override
-    protected void write(Connection c) throws SQLException {
-        try(PreparedStatement addNewCount = c.prepareStatement(Statements.ADD_HOURLY_PLAYER_COUNT.toString())) {
-            addNewCount.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
-            addNewCount.setInt(2, players);
-            addNewCount.execute();
+    public final void run() {
+        try(Connection c = ds.getConnection()) {
+            write(c);
+        } catch(SQLException ex) {
+            Logger.getLogger(WritePlayerCountTask.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }
