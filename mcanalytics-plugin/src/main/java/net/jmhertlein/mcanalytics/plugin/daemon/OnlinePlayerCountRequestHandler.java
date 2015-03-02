@@ -16,7 +16,6 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
-import org.bukkit.Bukkit;
 import org.json.JSONObject;
 
 /**
@@ -30,12 +29,11 @@ public class OnlinePlayerCountRequestHandler extends RequestHandler {
     }
 
     @Override
-    public void run() {
+    public JSONObject handle(JSONObject req) {
         JSONObject result = new JSONObject();
         int players = 5;
-        result.put("response_to", getResponseID());
         result.put("count", players);
-        respond(result);
+        return result;
     }
 
 }

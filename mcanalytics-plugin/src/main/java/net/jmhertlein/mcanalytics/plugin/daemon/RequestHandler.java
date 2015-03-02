@@ -16,6 +16,8 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
+import com.sun.media.jfxmedia.logging.Logger;
+import java.sql.SQLException;
 import org.json.JSONObject;
 
 /**
@@ -31,15 +33,27 @@ public abstract class RequestHandler implements Runnable {
         this.req = req;
     }
 
-    public long getResponseID() {
+    private long getResponseID() {
         return req.getLong("id");
     }
 
-    public JSONObject getReq() {
-        return req;
-    }
+    public abstract JSONObject handle(JSONObject request) throws SQLException;
 
-    public void respond(JSONObject o) {
+    @Override
+    public final void run() {
+        JSONObject o;
+        try {
+            o = handle(req);
+            o.put("status", "OK");
+        } catch(SQLException e) {
+            e.printStackTrace();
+            o = new JSONObject();
+            o.put("status", "ERROR");
+            o.put("status_msg", e.getLocalizedMessage());
+        }
+
+        o.put("response_to", getResponseID());
         dispatcher.queueResponse(o);
     }
+
 }

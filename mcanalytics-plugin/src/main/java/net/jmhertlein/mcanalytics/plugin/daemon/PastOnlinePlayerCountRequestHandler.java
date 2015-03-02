@@ -23,8 +23,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest.Parameters;
 import net.jmhertlein.mcanalytics.plugin.Statements;
@@ -43,36 +41,28 @@ public class PastOnlinePlayerCountRequestHandler extends RequestHandler {
     }
 
     @Override
-    public void run() {
-        try {
-            Connection conn = connections.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(Statements.GET_HOURLY_PLAYER_COUNTS.toString());
+    public JSONObject handle(JSONObject req) throws SQLException {
+        Connection conn = connections.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(Statements.GET_HOURLY_PLAYER_COUNTS.toString());
 
-            Parameters args = Parameters.fromJSON(this.getReq());
+        Parameters args = Parameters.fromJSON(req);
 
-            stmt.clearParameters();
-            stmt.setTimestamp(1, Timestamp.valueOf(args.getStart()));
-            stmt.setTimestamp(2, Timestamp.valueOf(args.getEnd()));
-            ResultSet res = stmt.executeQuery();
+        stmt.clearParameters();
+        stmt.setTimestamp(1, Timestamp.valueOf(args.getStart()));
+        stmt.setTimestamp(2, Timestamp.valueOf(args.getEnd()));
+        ResultSet res = stmt.executeQuery();
 
-            Map<String, Integer> counts = new HashMap<>();
-            int rows = 0;
-            while(res.next()) {
-                rows++;
-                counts.put(res.getTimestamp("instant").toLocalDateTime().toString(), res.getInt("count"));
-            }
-
-            JSONObject ret = new JSONObject();
-            ret.put("counts", counts);
-            ret.put("response_to", getResponseID());
-            res.close();
-            stmt.close();
-            conn.close();
-
-            respond(ret);
-        } catch(SQLException ex) {
-            Logger.getLogger(PastOnlinePlayerCountRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
+        Map<String, Integer> counts = new HashMap<>();
+        while(res.next()) {
+            counts.put(res.getTimestamp("instant").toLocalDateTime().toString(), res.getInt("count"));
         }
-    }
 
+        JSONObject ret = new JSONObject();
+        ret.put("counts", counts);
+        res.close();
+        stmt.close();
+        conn.close();
+
+        return ret;
+    }
 }
