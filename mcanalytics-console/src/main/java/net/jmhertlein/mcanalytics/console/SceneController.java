@@ -83,7 +83,10 @@ public class SceneController implements Initializable {
     private void onSearch(ActionEvent event) {
         FutureRequest<LinkedHashMap<LocalDateTime, Integer>> submit;
         try {
-            submit = sock.submit(new PastOnlinePlayerCountRequest(startDatePicker.getValue().atStartOfDay(), endDatePicker.getValue().plusDays(1).atStartOfDay()));
+            submit = sock.submit(new PastOnlinePlayerCountRequest(
+                    startDatePicker.getValue().atStartOfDay(),
+                    endDatePicker.getValue().plusDays(1).atStartOfDay()
+            ));
         } catch(IOException ex) {
             Logger.getLogger(SceneController.class.getName()).log(Level.SEVERE, null, ex);
             return;
