@@ -1,3 +1,9 @@
 .button {
-    -fx-font-weight: bold;
+  -fx-font-weight: bold;
+}
+
+.progress-indicator .percentage {
+  -fx-fill: null;
+  -fx-scale-x: 0;
+  -fx-scale-y: 0;
 }

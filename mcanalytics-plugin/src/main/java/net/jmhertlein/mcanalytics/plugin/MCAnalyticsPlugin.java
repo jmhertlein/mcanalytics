@@ -17,8 +17,6 @@
 package net.jmhertlein.mcanalytics.plugin;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
-import java.io.File;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
