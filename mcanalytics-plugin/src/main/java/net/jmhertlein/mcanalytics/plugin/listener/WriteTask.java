@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -31,20 +32,22 @@ import org.bukkit.scheduler.BukkitRunnable;
 public abstract class WriteTask extends BukkitRunnable {
     private MCAnalyticsPlugin p;
     private DataSource ds;
+    private StatementProvider stmts;
 
-    public WriteTask(MCAnalyticsPlugin p, DataSource ds) {
+    public WriteTask(MCAnalyticsPlugin p, DataSource ds, StatementProvider stmts) {
         this.p = p;
         this.ds = ds;
+        this.stmts = stmts;
     }
 
     public abstract void gather();
 
-    protected abstract void write(Connection c) throws SQLException;
+    protected abstract void write(Connection c, StatementProvider stmts) throws SQLException;
 
     @Override
     public final void run() {
         try(Connection c = ds.getConnection()) {
-            write(c);
+            write(c, stmts);
         } catch(SQLException ex) {
             Logger.getLogger(WritePlayerCountTask.class.getName()).log(Level.SEVERE, null, ex);
         }

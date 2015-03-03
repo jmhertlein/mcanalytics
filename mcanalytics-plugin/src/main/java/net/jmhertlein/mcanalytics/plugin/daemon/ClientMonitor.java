@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
 
 /**
@@ -38,10 +39,10 @@ public class ClientMonitor implements Runnable {
     private final ExecutorService workers;
     private final RequestDispatcher dispatcher;
 
-    public ClientMonitor(DataSource connections, ExecutorService workers, Socket client) {
+    public ClientMonitor(DataSource connections, StatementProvider stmts, ExecutorService workers, Socket client) {
         this.client = client;
         this.workers = workers;
-        dispatcher = new RequestDispatcher(connections, workers);
+        dispatcher = new RequestDispatcher(connections, stmts, workers);
     }
 
     @Override

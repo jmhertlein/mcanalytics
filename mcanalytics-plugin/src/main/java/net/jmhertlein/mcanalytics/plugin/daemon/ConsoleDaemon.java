@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 
 /**
  *
@@ -35,10 +36,12 @@ public class ConsoleDaemon {
     private final ExecutorService workers;
     private ServerSocket s;
     private final DataSource connections;
+    private final StatementProvider stmts;
 
-    public ConsoleDaemon(DataSource connections) {
+    public ConsoleDaemon(DataSource connections, StatementProvider stmts) {
         workers = Executors.newCachedThreadPool();
         this.connections = connections;
+        this.stmts = stmts;
     }
 
     public void startListening() {
@@ -63,7 +66,7 @@ public class ConsoleDaemon {
                 Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
                 continue;
             }
-            workers.submit(new ClientMonitor(connections, workers, client));
+            workers.submit(new ClientMonitor(connections, stmts, workers, client));
         }
     }
 }

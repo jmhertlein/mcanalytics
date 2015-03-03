@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS NewPlayerLogin(
+  date_joined DATETIME,
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(16),
+  bounced BOOLEAN DEFAULT TRUE,
+  INDEX USING BTREE(date_joined)
+);

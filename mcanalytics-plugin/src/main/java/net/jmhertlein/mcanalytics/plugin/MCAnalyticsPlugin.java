@@ -17,6 +17,8 @@
 package net.jmhertlein.mcanalytics.plugin;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
+import java.io.File;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -41,6 +43,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     private DataSource connections;
     private ScheduledExecutorService cron;
     private ConsoleDaemon d;
+    private StatementProvider stmts;
 
     @Override
     public void onEnable() {
@@ -60,9 +63,12 @@ public class MCAnalyticsPlugin extends JavaPlugin {
                 pass = getConfig().getString("database.pass");
         int port = getConfig().getInt("database.port");
 
+        SQLBackend dbType = SQLBackend.parse(type);
+        stmts = new StatementProvider("/db", dbType);
+
         try {
-            switch(type) {
-                case "mysql":
+            switch(dbType) {
+                case MYSQL:
                     Class.forName("com.mysql.jdbc.Driver");
                     MysqlConnectionPoolDataSource msqlpool = new MysqlConnectionPoolDataSource();
                     msqlpool.setDatabaseName(dbName);
@@ -73,7 +79,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
                     connections = msqlpool;
                     break;
-                case "postgres":
+                case POSTGRES:
                     Class.forName("org.postgresql.Driver");
                     PGPoolingDataSource pgpool = new PGPoolingDataSource();
                     pgpool.setDataSourceName("mcanalytics-pg-pool");
@@ -97,7 +103,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     public void setupTimedHooks() {
         cron = Executors.newSingleThreadScheduledExecutor();
         cron.scheduleAtFixedRate(() -> {
-            WritePlayerCountTask t = new WritePlayerCountTask(this, connections);
+            WritePlayerCountTask t = new WritePlayerCountTask(this, connections, stmts);
             t.gather();
             Bukkit.getScheduler().runTask(this, t);
         }, 0, 1, TimeUnit.MINUTES);
@@ -105,8 +111,8 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     private void setupDatabase() {
         try(Connection conn = connections.getConnection(); Statement s = conn.createStatement()) {
-            s.execute(Statements.CREATE_HOURLY_PLAYER_COUNT.toString());
-            s.execute(Statements.CREATE_NEW_PLAYER_LOGIN.toString());
+            s.execute(stmts.get(SQLString.CREATE_HOURLY_PLAYER_COUNT));
+            s.execute(stmts.get(SQLString.CREATE_NEW_PLAYER_LOGIN));
         } catch(SQLException ex) {
             Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -114,12 +120,12 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     }
 
     private void startConsoleDaemon() {
-        d = new ConsoleDaemon(connections);
+        d = new ConsoleDaemon(connections, stmts);
         d.startListening();
     }
 
     private void setupListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerListener(this, connections), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(this, connections, stmts), this);
     }
 
 }

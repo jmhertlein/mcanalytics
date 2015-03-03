@@ -14,28 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.daemon;
-
-import javax.sql.DataSource;
-import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.json.JSONObject;
+package net.jmhertlein.mcanalytics.plugin;
 
 /**
  *
  * @author joshua
  */
-public class OnlinePlayerCountRequestHandler extends RequestHandler {
-
-    public OnlinePlayerCountRequestHandler(DataSource ds, StatementProvider stmts, RequestDispatcher d, JSONObject req) {
-        super(ds, stmts, d, req);
-    }
-
-    @Override
-    public JSONObject handle(DataSource ds, StatementProvider stmts, JSONObject req) {
-        JSONObject result = new JSONObject();
-        int players = 5;
-        result.put("count", players);
-        return result;
-    }
-
+public enum SQLString {
+    CREATE_HOURLY_PLAYER_COUNT,
+    ADD_HOURLY_PLAYER_COUNT,
+    GET_HOURLY_PLAYER_COUNTS,
+    CREATE_NEW_PLAYER_LOGIN,
+    ADD_NEW_PLAYER_LOGIN;
 }

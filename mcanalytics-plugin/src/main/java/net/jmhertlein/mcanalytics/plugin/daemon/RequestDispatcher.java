@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.request.RequestType;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
 
 /**
@@ -30,11 +31,13 @@ public class RequestDispatcher {
     private final ExecutorService workers;
     private final ConcurrentLinkedQueue<JSONObject> writeQueue;
     private final DataSource connections;
+    private final StatementProvider stmts;
 
-    public RequestDispatcher(DataSource connections, ExecutorService workers) {
+    public RequestDispatcher(DataSource connections, StatementProvider stmts, ExecutorService workers) {
         this.workers = workers;
         writeQueue = new ConcurrentLinkedQueue<>();
         this.connections = connections;
+        this.stmts = stmts;
     }
 
     public void submitJob(JSONObject job) {
@@ -58,10 +61,10 @@ public class RequestDispatcher {
         Runnable ret;
         switch(type) {
             case ONLINE_PLAYER_COUNT:
-                ret = new OnlinePlayerCountRequestHandler(this, job);
+                ret = new OnlinePlayerCountRequestHandler(connections, stmts, this, job);
                 break;
             case PAST_ONLINE_PLAYER_COUNT:
-                ret = new PastOnlinePlayerCountRequestHandler(connections, this, job);
+                ret = new PastOnlinePlayerCountRequestHandler(connections, stmts, this, job);
                 break;
             default:
                 ret = null;

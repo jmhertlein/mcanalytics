@@ -24,7 +24,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
-import net.jmhertlein.mcanalytics.plugin.Statements;
+import net.jmhertlein.mcanalytics.plugin.SQLString;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.bukkit.entity.Player;
 
 /**
@@ -37,8 +38,8 @@ public class WriteFirstLoginTask extends WriteTask {
     private UUID id;
     private String name;
 
-    public WriteFirstLoginTask(MCAnalyticsPlugin p, DataSource ds, Player pl) {
-        super(p, ds);
+    public WriteFirstLoginTask(Player pl, MCAnalyticsPlugin p, DataSource ds, StatementProvider stmts) {
+        super(p, ds, stmts);
         this.pl = pl;
     }
 
@@ -50,8 +51,8 @@ public class WriteFirstLoginTask extends WriteTask {
     }
 
     @Override
-    protected void write(Connection c) throws SQLException {
-        try(PreparedStatement p = c.prepareStatement(Statements.ADD_NEW_PLAYER_LOGIN.toString())) {
+    protected void write(Connection c, StatementProvider stmts) throws SQLException {
+        try(PreparedStatement p = c.prepareStatement(stmts.get(SQLString.ADD_NEW_PLAYER_LOGIN))) {
             p.setTimestamp(1, Timestamp.valueOf(loginTime));
             p.setString(2, id.toString());
             p.setString(3, name);

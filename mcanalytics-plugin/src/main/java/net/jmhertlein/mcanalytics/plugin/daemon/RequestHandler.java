@@ -17,6 +17,8 @@
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
 import java.sql.SQLException;
+import javax.sql.DataSource;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
 
 /**
@@ -26,23 +28,27 @@ import org.json.JSONObject;
 public abstract class RequestHandler implements Runnable {
     private final RequestDispatcher dispatcher;
     private final JSONObject req;
+    private final DataSource ds;
+    private final StatementProvider stmts;
 
-    public RequestHandler(RequestDispatcher d, JSONObject req) {
+    public RequestHandler(DataSource ds, StatementProvider stmts, RequestDispatcher d, JSONObject req) {
         this.dispatcher = d;
         this.req = req;
+        this.ds = ds;
+        this.stmts = stmts;
     }
 
     private long getResponseID() {
         return req.getLong("id");
     }
 
-    public abstract JSONObject handle(JSONObject request) throws SQLException;
+    public abstract JSONObject handle(DataSource ds, StatementProvider stmts, JSONObject request) throws SQLException;
 
     @Override
     public final void run() {
         JSONObject o;
         try {
-            o = handle(req);
+            o = handle(ds, stmts, req);
             o.put("status", "OK");
         } catch(SQLException e) {
             e.printStackTrace();

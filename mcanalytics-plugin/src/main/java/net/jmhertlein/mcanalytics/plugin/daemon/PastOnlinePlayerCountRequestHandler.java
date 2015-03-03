@@ -25,7 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest.Parameters;
-import net.jmhertlein.mcanalytics.plugin.Statements;
+import net.jmhertlein.mcanalytics.plugin.SQLString;
+import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
 
 /**
@@ -33,17 +34,15 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class PastOnlinePlayerCountRequestHandler extends RequestHandler {
-    private final DataSource connections;
 
-    public PastOnlinePlayerCountRequestHandler(DataSource connections, RequestDispatcher d, JSONObject req) {
-        super(d, req);
-        this.connections = connections;
+    public PastOnlinePlayerCountRequestHandler(DataSource connections, StatementProvider stmts, RequestDispatcher d, JSONObject req) {
+        super(connections, stmts, d, req);
     }
 
     @Override
-    public JSONObject handle(JSONObject req) throws SQLException {
+    public JSONObject handle(DataSource connections, StatementProvider stmts, JSONObject req) throws SQLException {
         Connection conn = connections.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(Statements.GET_HOURLY_PLAYER_COUNTS.toString());
+        PreparedStatement stmt = conn.prepareStatement(stmts.get(SQLString.GET_HOURLY_PLAYER_COUNTS));
 
         Parameters args = Parameters.fromJSON(req);
 
