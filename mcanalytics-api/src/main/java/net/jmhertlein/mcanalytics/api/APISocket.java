@@ -16,23 +16,19 @@
  */
 package net.jmhertlein.mcanalytics.api;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import net.jmhertlein.mcanalytics.api.request.Request;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.io.PrintWriter;
+import java.io.StringReader;
 import java.net.SocketException;
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
 import org.json.JSONObject;
 
 /**
@@ -42,11 +38,11 @@ import org.json.JSONObject;
 public class APISocket {
     private final Map<Long, FutureRequest<?>> requests;
     private long nextID;
-    private final ObjectOutputStream out;
-    private final ObjectInputStream in;
+    private final PrintWriter out;
+    private final BufferedReader in;
     private final ExecutorService workers;
 
-    public APISocket(ObjectOutputStream out, ObjectInputStream in) {
+    public APISocket(PrintWriter out, BufferedReader in) {
         nextID = 0;
         requests = new ConcurrentHashMap<>();
         this.out = out;
@@ -60,7 +56,7 @@ public class APISocket {
         requests.put(nextID, r);
         nextID++;
 
-        out.writeUTF(r.toJSON());
+        out.println(r.toJSON());
         out.flush();
 
         return r;
@@ -74,7 +70,12 @@ public class APISocket {
         for(;;) {
             JSONObject read;
             try {
-                read = new JSONObject(in.readUTF());
+                String readStr = in.readLine();
+                if(readStr == null) {
+                    System.out.println("READ: exiting due to suspected socket closure.");
+                    return;
+                }
+                read = new JSONObject(readStr);
             } catch(SocketException | EOFException ex) {
                 System.out.println("Socket closed (" + ex.getLocalizedMessage() + ").");
                 return;
@@ -89,6 +90,16 @@ public class APISocket {
                 r.setResponse(read);
                 workers.submit(r);
             }
+        }
+    }
+
+    public void shutdown() {
+        workers.shutdownNow();
+        out.close();
+        try {
+            in.close();
+        } catch(IOException ex) {
+            Logger.getLogger(APISocket.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

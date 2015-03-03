@@ -16,9 +16,12 @@
  */
 package net.jmhertlein.mcanalytics.console;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -70,8 +73,8 @@ public class SceneController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         try {
             raw = new Socket("localhost", 35555);
-            ObjectOutputStream out = new ObjectOutputStream(raw.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(raw.getInputStream());
+            PrintWriter out = new PrintWriter(raw.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
             sock = new APISocket(out, in);
             sock.startListener();
         } catch(IOException ex) {

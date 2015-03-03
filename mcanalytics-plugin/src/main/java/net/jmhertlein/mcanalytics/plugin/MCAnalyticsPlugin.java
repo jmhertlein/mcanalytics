@@ -31,6 +31,8 @@ import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.daemon.ConsoleDaemon;
 import net.jmhertlein.mcanalytics.plugin.listener.PlayerListener;
 import net.jmhertlein.mcanalytics.plugin.listener.WritePlayerCountTask;
+import net.jmhertlein.reflective.TreeCommandExecutor;
+import net.jmhertlein.reflective.TreeTabCompleter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.postgresql.ds.PGPoolingDataSource;
@@ -53,9 +55,16 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         setupListeners();
         setupTimedHooks();
         startConsoleDaemon();
+        setupCommands();
     }
 
-    public void connectToDatabase() {
+    @Override
+    public void onDisable() {
+        cron.shutdown();
+        d.shutdown();
+    }
+
+    private void connectToDatabase() {
         String type = getConfig().getString("database.type"),
                 host = getConfig().getString("database.host"),
                 dbName = getConfig().getString("database.db_name"),
@@ -100,7 +109,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         }
     }
 
-    public void setupTimedHooks() {
+    private void setupTimedHooks() {
         cron = Executors.newSingleThreadScheduledExecutor();
         cron.scheduleAtFixedRate(() -> {
             WritePlayerCountTask t = new WritePlayerCountTask(this, connections, stmts);
@@ -126,6 +135,13 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     private void setupListeners() {
         getServer().getPluginManager().registerEvents(new PlayerListener(this, connections, stmts), this);
+    }
+
+    private void setupCommands() {
+        TreeCommandExecutor tree = new TreeCommandExecutor();
+        tree.add(new AnalyticsCommandDefinition());
+        getServer().getPluginCommand("mca").setExecutor(tree);
+        getServer().getPluginCommand("mca").setTabCompleter(new TreeTabCompleter(tree));
     }
 
 }

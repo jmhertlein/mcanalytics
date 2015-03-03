@@ -18,6 +18,8 @@ package net.jmhertlein.mcanalytics.plugin;
 
 import net.jmhertlein.reflective.CommandDefinition;
 import net.jmhertlein.reflective.annotation.CommandMethod;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 
 /**
  *
@@ -33,5 +35,11 @@ public class AnalyticsCommandDefinition implements CommandDefinition {
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")
     public void listConnectedUsers(String name) {
         throw new UnsupportedOperationException();
+    }
+
+    @CommandMethod(path = "mca gc", permNode = "mca.debug")
+    public void manualGC(CommandSender s) {
+        System.gc();
+        s.sendMessage(ChatColor.GREEN + "Manually running GC!!");
     }
 }

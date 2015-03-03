@@ -22,6 +22,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -68,5 +69,23 @@ public class ConsoleDaemon {
             }
             workers.submit(new ClientMonitor(connections, stmts, workers, client));
         }
+    }
+
+    public void shutdown() {
+        workers.shutdownNow();
+        try {
+            s.close();
+        } catch(IOException ex) {
+            Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            System.out.println("Daemon going for shutdown, waiting for workers to die...");
+            workers.awaitTermination(30, TimeUnit.SECONDS);
+            System.out.println("Timed out or stopped.");
+        } catch(InterruptedException ex) {
+            Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 }
