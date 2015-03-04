@@ -19,8 +19,6 @@ package net.jmhertlein.mcanalytics.console;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
@@ -66,20 +64,21 @@ public class SceneController implements Initializable {
     @FXML
     private Button searchButton;
 
+    private PrintWriter out;
+    private BufferedReader in;
+
+    public void setIO(PrintWriter out, BufferedReader in) {
+        this.out = out;
+        this.in = in;
+    }
+
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        try {
-            raw = new Socket("localhost", 35555);
-            PrintWriter out = new PrintWriter(raw.getOutputStream());
-            BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
-            sock = new APISocket(out, in);
-            sock.startListener();
-        } catch(IOException ex) {
-            Logger.getLogger(SceneController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        sock = new APISocket(out, in);
+        sock.startListener();
     }
 
     @FXML

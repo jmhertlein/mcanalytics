@@ -16,9 +16,28 @@
  */
 package net.jmhertlein.mcanalytics.console;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Accordion;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /**
  * FXML Controller class
@@ -26,13 +45,41 @@ import javafx.fxml.Initializable;
  * @author joshua
  */
 public class LoginSceneController implements Initializable {
+    @FXML
+    private Accordion serverList;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Button loginButton;
+    @FXML
+    private CheckBox rememberLoginBox;
 
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+
+    }
+
+    @FXML
+    public void onLoginButtonPressed(ActionEvent event) {
+        try {
+            Socket raw = new Socket("localhost", 35555);
+            PrintWriter out = new PrintWriter(raw.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
+
+            FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/ChartScene.fxml"));
+            ((SceneController) l.getController()).setIO(out, in);
+            Stage window = (Stage) loginButton.getScene().getWindow();
+            window.setScene(new Scene(l.load()));
+            window.show();
+        } catch(IOException ex) {
+            Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("No login 4 u");
+        }
     }
 
 }
