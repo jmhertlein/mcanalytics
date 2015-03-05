@@ -16,8 +16,14 @@
  */
 package net.jmhertlein.mcanalytics.api.auth;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
 import java.security.KeyManagementException;
@@ -32,6 +38,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
@@ -45,8 +52,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -147,15 +157,15 @@ public class SSLUtil {
         return ret;
     }
 
-    private SSLContext buildContext() {
+    private static SSLContext buildContext(KeyStore trustMaterial) {
         SSLContext ctx;
         try {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(clientTrust);
+            tmf.init(trustMaterial);
             ctx = SSLContext.getInstance("TLS");
             //key manager factory go!
             KeyManagerFactory keyMgr = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyMgr.init(clientTrust, new char[0]);
+            keyMgr.init(trustMaterial, new char[0]);
 
             ctx.init(keyMgr.getKeyManagers(), tmf.getTrustManagers(), null);
         } catch(KeyStoreException | UnrecoverableKeyException | KeyManagementException | NoSuchAlgorithmException ex) {
@@ -166,7 +176,7 @@ public class SSLUtil {
         return ctx;
     }
 
-    private KeyStore getNewKeyStore() {
+    private static KeyStore getNewKeyStore() {
         KeyStore store;
         try {
             store = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -209,5 +219,63 @@ public class SSLUtil {
         System.out.println("Signing requested cert");
         X509Certificate clCert = fulfillCertRequest(caPair.getPrivate(), caCert, clReq);
         System.out.println("Yay done");
+
+        Runnable server = () -> {
+            KeyStore serverStore = getNewKeyStore();
+            try {
+                serverStore.setCertificateEntry("testCA", caCert);
+                serverStore.setKeyEntry("caPrivateKey", caPair.getPrivate(), new char[0], new Certificate[]{caCert});
+            } catch(KeyStoreException ex) {
+                Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            SSLContext ctx = buildContext(serverStore);
+            ServerSocket serverSock;
+            try {
+                serverSock = ctx.getServerSocketFactory().createServerSocket(50000);
+                System.out.println("Listening...");
+                Socket client = serverSock.accept();
+                System.out.println("Got client.");
+                PrintWriter out = new PrintWriter(new GZIPOutputStream(client.getOutputStream()));
+                //BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(client.getInputStream())));
+
+                out.println("Hello, world!");
+                out.flush();
+                System.out.println("SERVER: Wrote.");
+                out.close();
+                //in.close();
+                client.close();
+            } catch(IOException ex) {
+                Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
+        };
+
+        Thread t = new Thread(server);
+        t.start();
+
+        try {
+            System.out.println("Waiting for 1 sec...");
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        KeyStore clientStore = getNewKeyStore();
+        try {
+            clientStore.setCertificateEntry("caCert", caCert);
+        } catch(KeyStoreException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        SSLContext ctx = buildContext(clientStore);
+        try {
+            Socket sock = ctx.getSocketFactory().createSocket("localhost", 50000);
+            BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(sock.getInputStream())));
+            System.out.println(in.readLine());
+            in.close();
+            sock.close();
+        } catch(IOException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
