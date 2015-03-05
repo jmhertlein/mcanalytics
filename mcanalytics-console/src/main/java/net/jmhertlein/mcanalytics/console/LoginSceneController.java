@@ -72,13 +72,12 @@ public class LoginSceneController implements Initializable {
             BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
 
             FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/ChartScene.fxml"));
-            ((SceneController) l.getController()).setIO(out, in);
+            ((ChartSceneController) l.getController()).setIO(out, in);
             Stage window = (Stage) loginButton.getScene().getWindow();
             window.setScene(new Scene(l.load()));
             window.show();
         } catch(IOException ex) {
             Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("No login 4 u");
         }
     }
 

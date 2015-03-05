@@ -8,7 +8,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.jmhertlein.mcanalytics.console.SceneController">
+<GridPane prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.jmhertlein.mcanalytics.console.ChartSceneController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="300.0" />
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="300.0" />
@@ -18,15 +18,15 @@
     <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="400.0" vgrow="ALWAYS" />
   </rowConstraints>
   <children>
-      <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" GridPane.vgrow="NEVER" />
+    <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" GridPane.vgrow="NEVER" />
     <BorderPane fx:id="chartPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" />
     <HBox alignment="CENTER_LEFT" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.hgrow="SOMETIMES" GridPane.vgrow="NEVER">
       <children>
-          <ChoiceBox fx:id="chartChooser" prefWidth="150.0">
-               <HBox.margin>
-                  <Insets right="5.0" />
-               </HBox.margin>
-          </ChoiceBox>
+        <ChoiceBox fx:id="chartChooser" prefWidth="150.0">
+          <HBox.margin>
+            <Insets right="5.0" />
+          </HBox.margin>
+        </ChoiceBox>
         <DatePicker fx:id="startDatePicker" maxWidth="100.0" promptText="Start" />
         <DatePicker fx:id="endDatePicker" prefHeight="25.0" prefWidth="100.0" promptText="End">
           <HBox.margin>
@@ -38,11 +38,11 @@
             <Insets left="5.0" />
           </HBox.margin>
         </Button>
-            <ProgressBar prefWidth="100.0" progress="0.0">
-               <HBox.margin>
-                  <Insets left="5.0" />
-               </HBox.margin>
-            </ProgressBar>
+        <ProgressBar prefWidth="100.0" progress="0.0">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </ProgressBar>
       </children>
       <GridPane.margin>
         <Insets left="5.0" top="5.0" />

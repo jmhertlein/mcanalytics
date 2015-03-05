@@ -49,7 +49,7 @@ import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
  *
  * @author joshua
  */
-public class SceneController implements Initializable {
+public class ChartSceneController implements Initializable {
     private Socket raw;
     private APISocket sock;
 
@@ -90,7 +90,7 @@ public class SceneController implements Initializable {
                     endDatePicker.getValue().plusDays(1).atStartOfDay()
             ));
         } catch(IOException ex) {
-            Logger.getLogger(SceneController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ChartSceneController.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
 
@@ -100,7 +100,7 @@ public class SceneController implements Initializable {
             chartPane.layout();
 
         } catch(InterruptedException | ExecutionException ex) {
-            Logger.getLogger(SceneController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ChartSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
