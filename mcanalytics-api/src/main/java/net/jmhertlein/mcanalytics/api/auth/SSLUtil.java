@@ -58,10 +58,18 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.X500NameStyle;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -93,7 +101,7 @@ public class SSLUtil {
         }
     }
 
-    public static X509Certificate newSelfSignedCertificate(KeyPair pair, String subject) {
+    public static X509Certificate newSelfSignedCertificate(KeyPair pair, String subject, boolean isAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
                 getName(subject),
                 BigInteger.ZERO,
@@ -101,6 +109,11 @@ public class SSLUtil {
                 Date.from(LocalDateTime.now().plusYears(3).toInstant(ZoneOffset.UTC)),
                 getName(subject),
                 pair.getPublic());
+        try {
+            b.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+        } catch(CertIOException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         try {
             X509CertificateHolder bcCert = b.build(new JcaContentSignerBuilder(SIGNING_ALGORITHM).setProvider("BC").build(pair.getPrivate()));
@@ -111,7 +124,7 @@ public class SSLUtil {
         }
     }
 
-    public static X509Certificate fulfillCertRequest(PrivateKey caKey, X509Certificate caCert, PKCS10CertificationRequest r) {
+    public static X509Certificate fulfillCertRequest(PrivateKey caKey, X509Certificate caCert, PKCS10CertificationRequest r, boolean makeAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
                 new X500Name(caCert.getSubjectX500Principal().getName()),
                 BigInteger.ZERO,
@@ -119,6 +132,13 @@ public class SSLUtil {
                 Date.from(LocalDateTime.now().plusYears(3).toInstant(ZoneOffset.UTC)),
                 r.getSubject(),
                 getPublicKeyFromInfo(r.getSubjectPublicKeyInfo()));
+
+        try {
+            b.addExtension(Extension.basicConstraints, true, new BasicConstraints(makeAuthority));
+        } catch(CertIOException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         try {
             ContentSigner signer = new JcaContentSignerBuilder(SIGNING_ALGORITHM).setProvider("BC").build(caKey);
             X509CertificateHolder build = b.build(signer);
@@ -211,20 +231,25 @@ public class SSLUtil {
         System.out.println("Generating CA pair");
         KeyPair caPair = newECDSAKeyPair();
         System.out.println("Generating self-signed CA cert.");
-        X509Certificate caCert = newSelfSignedCertificate(caPair, "joshCA");
+        X509Certificate caCert = newSelfSignedCertificate(caPair, "joshCA", true);
         System.out.println("Generating client pair");
         KeyPair clPair = newECDSAKeyPair();
         System.out.println("Generating CSR");
         PKCS10CertificationRequest clReq = newCertificateRequest("test-client", clPair);
         System.out.println("Signing requested cert");
-        X509Certificate clCert = fulfillCertRequest(caPair.getPrivate(), caCert, clReq);
+        X509Certificate clCert = fulfillCertRequest(caPair.getPrivate(), caCert, clReq, false); //set to true to make phony trusted/valid, false to throw exception
         System.out.println("Yay done");
+
+        KeyPair phonyPair = newECDSAKeyPair();
+
+        PKCS10CertificationRequest phonyRequest = newCertificateRequest("phonyCert", phonyPair);
+        X509Certificate phonyCert = fulfillCertRequest(clPair.getPrivate(), clCert, phonyRequest, false);
 
         Runnable server = () -> {
             KeyStore serverStore = getNewKeyStore();
             try {
-                serverStore.setCertificateEntry("testCA", caCert);
-                serverStore.setKeyEntry("caPrivateKey", caPair.getPrivate(), new char[0], new Certificate[]{caCert});
+                serverStore.setCertificateEntry("phonyServer", phonyCert);
+                serverStore.setKeyEntry("phonyPkey", phonyPair.getPrivate(), new char[0], new Certificate[]{phonyCert, clCert});
             } catch(KeyStoreException ex) {
                 Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
             }
