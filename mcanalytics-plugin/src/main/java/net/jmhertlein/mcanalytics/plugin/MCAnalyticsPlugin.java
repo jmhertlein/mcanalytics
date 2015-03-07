@@ -17,6 +17,18 @@
 package net.jmhertlein.mcanalytics.plugin;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -26,11 +38,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.daemon.ConsoleDaemon;
 import net.jmhertlein.mcanalytics.plugin.listener.PlayerListener;
 import net.jmhertlein.mcanalytics.plugin.listener.WritePlayerCountTask;
 import net.jmhertlein.reflective.TreeCommandExecutor;
 import net.jmhertlein.reflective.TreeTabCompleter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.postgresql.ds.PGPoolingDataSource;
@@ -44,14 +58,17 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     private ScheduledExecutorService cron;
     private ConsoleDaemon d;
     private StatementProvider stmts;
+    private KeyStore trustMaterial;
 
     @Override
     public void onEnable() {
+        Security.addProvider(new BouncyCastleProvider());
         saveDefaultConfig();
         connectToDatabase();
         setupDatabase();
         setupListeners();
         setupTimedHooks();
+        loadTrustMaterial(new File(getDataFolder(), "trust.jks"));
         startConsoleDaemon();
         setupCommands();
     }
@@ -127,7 +144,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     }
 
     private void startConsoleDaemon() {
-        d = new ConsoleDaemon(connections, stmts);
+        d = new ConsoleDaemon(trustMaterial, connections, stmts);
         d.startListening();
     }
 
@@ -140,6 +157,41 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         tree.add(new AnalyticsCommandDefinition());
         getServer().getPluginCommand("mca").setExecutor(tree);
         getServer().getPluginCommand("mca").setTabCompleter(new TreeTabCompleter(tree));
+    }
+
+    private void loadTrustMaterial(File source) {
+        trustMaterial = SSLUtil.newKeyStore();
+
+        if(source.exists()) {
+            try(FileInputStream fis = new FileInputStream(source)) {
+                trustMaterial.load(fis, new char[0]);
+            } catch(IOException | NoSuchAlgorithmException | CertificateException ex) {
+                Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            getLogger().info("No keystore found, re-initializing.");
+            populateWithTrustMaterial(trustMaterial);
+            try(FileOutputStream fos = new FileOutputStream(source)) {
+                trustMaterial.store(fos, new char[0]);
+                getLogger().info("Saved new store to disk.");
+            } catch(IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException ex) {
+                Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void populateWithTrustMaterial(KeyStore store) {
+        getLogger().info("Generating new ECDSA keypair (this may take a moment)");
+        KeyPair keys = SSLUtil.newECDSAKeyPair();
+        Certificate cert = SSLUtil.newSelfSignedCertificate(keys, SSLUtil.newX500Name("MCAnalytics Server", getServer().getName(), "plugins"), false);
+
+        try {
+            store.setCertificateEntry("serverIdentity", cert);
+            store.setKeyEntry("serverPrivateKey", keys.getPrivate(), new char[0], new Certificate[]{cert});
+            getLogger().info("Successfully created new server identity.");
+        } catch(KeyStoreException ex) {
+            getLogger().log(Level.SEVERE, "Error creating server's identity: {0}", ex.getLocalizedMessage());
+        }
     }
 
 }

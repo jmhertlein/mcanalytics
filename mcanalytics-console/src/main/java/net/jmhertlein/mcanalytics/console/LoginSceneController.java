@@ -17,11 +17,23 @@
 package net.jmhertlein.mcanalytics.console;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +41,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
@@ -38,6 +51,14 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocket;
+import net.jmhertlein.mcanalytics.api.APISocket;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
+import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
+import net.jmhertlein.mcanalytics.console.gui.CertTrustPromptController;
+import net.jmhertlein.mcanalytics.console.gui.X509PaneController;
 
 /**
  * FXML Controller class
@@ -45,6 +66,8 @@ import javafx.stage.Window;
  * @author joshua
  */
 public class LoginSceneController implements Initializable {
+    private static final Path DATA_PATH = Paths.get(System.getProperty("user.home"), ".local", "share", "mcanalytics-console"),
+            TM_PATH = DATA_PATH.resolve("trust.jks");
     @FXML
     private Accordion serverList;
     @FXML
@@ -56,25 +79,68 @@ public class LoginSceneController implements Initializable {
     @FXML
     private CheckBox rememberLoginBox;
 
+    private KeyStore trust;
+
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        trust = SSLUtil.newKeyStore();
+        File f = TM_PATH.toFile();
+        if(f.exists()) {
+            try(FileInputStream fis = new FileInputStream(f)) {
+                trust.load(fis, new char[0]);
+            } catch(IOException | NoSuchAlgorithmException | CertificateException ex) {
+                System.err.println("Error loading trust source: " + ex.getLocalizedMessage());
+            }
+        } else {
+            System.out.println("No trust.jks, generating new...");
+            KeyPair pair = SSLUtil.newECDSAKeyPair();
+            X509Certificate cert = SSLUtil.newSelfSignedCertificate(pair, SSLUtil.newX500Name(System.getProperty("user.name"), "<Servername>", "MCAnalytics Users"), false);
+            try {
+                trust.setCertificateEntry("client-public-selfsigned", cert);
+                trust.setKeyEntry("client-private", pair.getPrivate(), new char[0], new Certificate[]{cert});
+            } catch(KeyStoreException ex) {
+                System.err.println("Error initializing keystore: " + ex.getLocalizedMessage());
+            }
+        }
 
     }
 
     @FXML
     public void onLoginButtonPressed(ActionEvent event) {
         try {
-            Socket raw = new Socket("localhost", 35555);
+            SSLContext ctx = SSLUtil.buildClientContext(trust);
+            SSLSocket raw = (SSLSocket) ctx.getSocketFactory().createSocket("localhost", 35555);
+            try {
+                System.out.println("Starting handshake...");
+                raw.startHandshake();
+            } catch(SSLException ssle) {
+                if(ssle.getCause() instanceof UntrustedCertificateException) {
+                    System.out.println("Got the correct exception");
+                    UntrustedCertificateException uce = (UntrustedCertificateException) ssle.getCause();
+                    FXMLLoader l = new FXMLLoader();
+                    Parent load = (Parent) l.load(getClass().getResourceAsStream("/fxml/CertTrustPrompt.fxml"));
+                    ((CertTrustPromptController) l.getController()).setCertificate((X509Certificate) uce.getChain()[0]);
+                    ((CertTrustPromptController) l.getController()).setKeyStore(trust);
+                    Stage s = new Stage();
+                    s.setScene(new Scene(load));
+                    s.showAndWait();
+                }
+                return;
+            }
+
             PrintWriter out = new PrintWriter(raw.getOutputStream());
             BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
+            APISocket sock = new APISocket(out, in);
+            sock.startListener();
 
             FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/ChartScene.fxml"));
-            ((ChartSceneController) l.getController()).setIO(out, in);
+            Parent root = l.load();
+            ((ChartSceneController) l.getController()).setIO(sock);
             Stage window = (Stage) loginButton.getScene().getWindow();
-            window.setScene(new Scene(l.load()));
+            window.setScene(new Scene(root));
             window.show();
         } catch(IOException ex) {
             Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);

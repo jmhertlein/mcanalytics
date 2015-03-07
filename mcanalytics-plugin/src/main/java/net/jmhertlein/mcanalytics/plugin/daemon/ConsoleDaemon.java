@@ -16,16 +16,25 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
+import java.security.KeyStore;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 import javax.sql.DataSource;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 
 /**
@@ -35,14 +44,16 @@ import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 public class ConsoleDaemon {
     private static final int PORT = 35555;
     private final ExecutorService workers;
-    private ServerSocket s;
+    private SSLServerSocket s;
     private final DataSource connections;
     private final StatementProvider stmts;
+    private final KeyStore trustMaterial;
 
-    public ConsoleDaemon(DataSource connections, StatementProvider stmts) {
+    public ConsoleDaemon(KeyStore trustMaterial, DataSource connections, StatementProvider stmts) {
         workers = Executors.newCachedThreadPool();
         this.connections = connections;
         this.stmts = stmts;
+        this.trustMaterial = trustMaterial;
     }
 
     public void startListening() {
@@ -50,16 +61,24 @@ public class ConsoleDaemon {
     }
 
     public void listen() {
+        SSLContext ctx = SSLUtil.buildContext(trustMaterial);
         try {
-            s = new ServerSocket(PORT);
+            s = (SSLServerSocket) ctx.getServerSocketFactory().createServerSocket();
+            s.setWantClientAuth(true);
+            s.setUseClientMode(false);
+            s.bind(new InetSocketAddress(PORT));
         } catch(IOException ex) {
             Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         for(;;) {
-            Socket client;
+            SSLSocket client;
             try {
-                client = s.accept();
+                client = (SSLSocket) s.accept();
+                client.startHandshake();
+            } catch(SSLHandshakeException sslhe) {
+                System.err.println("Client dropped: " + sslhe.getLocalizedMessage());
+                continue;
             } catch(SocketException ex) {
                 System.out.println("Server port listen socket closed: " + ex.getLocalizedMessage());
                 return;

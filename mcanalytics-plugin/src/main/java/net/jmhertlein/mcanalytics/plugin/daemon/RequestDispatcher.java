@@ -41,12 +41,15 @@ public class RequestDispatcher {
     }
 
     public void submitJob(JSONObject job) {
+        System.out.println("Dispatcher is passing job to workers...");
         workers.submit(getHandlerForRequestJSON(job));
     }
 
     public void queueResponse(JSONObject o) {
+        System.out.println("DISPATCHER: queueing response.");
         writeQueue.add(o);
         synchronized(writeQueue) {
+            System.out.println("DISPATCHER: notifying writer.");
             writeQueue.notifyAll();
         }
     }
@@ -65,9 +68,11 @@ public class RequestDispatcher {
                 break;
             case PAST_ONLINE_PLAYER_COUNT:
                 ret = new PastOnlinePlayerCountRequestHandler(connections, stmts, this, job);
+                System.out.println("Job is a PastOnlinePlayerCountRequest");
                 break;
             default:
                 ret = null;
+                System.out.println("INVALID JOB");
         }
 
         return ret;

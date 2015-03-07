@@ -67,9 +67,8 @@ public class ChartSceneController implements Initializable {
     private PrintWriter out;
     private BufferedReader in;
 
-    public void setIO(PrintWriter out, BufferedReader in) {
-        this.out = out;
-        this.in = in;
+    public void setIO(APISocket s) {
+        sock = s;
     }
 
     /**
@@ -77,8 +76,6 @@ public class ChartSceneController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        sock = new APISocket(out, in);
-        sock.startListener();
     }
 
     @FXML

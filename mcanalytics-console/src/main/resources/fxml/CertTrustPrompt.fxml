@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.jmhertlein.mcanalytics.console.gui.CertTrustPromptController">
+  <bottom>
+    <HBox alignment="CENTER" BorderPane.alignment="CENTER">
+      <children>
+        <Button fx:id="trustButton" mnemonicParsing="false" onAction="#onTrust" text="Trust">
+          <font>
+            <Font size="19.0" />
+          </font>
+        </Button>
+        <Button fx:id="rejectButton" alignment="CENTER" mnemonicParsing="false" onAction="#onReject" text="Reject">
+          <font>
+            <Font size="19.0" />
+          </font>
+        </Button>
+      </children>
+      <padding>
+        <Insets bottom="5.0" />
+      </padding>
+    </HBox>
+  </bottom>
+  <top>
+    <AnchorPane prefHeight="70.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+      <children>
+        <Label layoutX="226.0" layoutY="7.0" text="SERVER NOT TRUSTED" textFill="RED" />
+        <Label layoutX="75.0" layoutY="22.0" prefHeight="38.0" prefWidth="451.0" text="The server you are trying to connect to presented a ceritficate that you do not currently trust. Do you wish to trust it?" wrapText="true" />
+      </children>
+    </AnchorPane>
+  </top>
+   <center>
+      <Pane fx:id="container" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>

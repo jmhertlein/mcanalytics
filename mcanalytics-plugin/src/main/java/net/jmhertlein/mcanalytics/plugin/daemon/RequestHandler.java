@@ -48,7 +48,9 @@ public abstract class RequestHandler implements Runnable {
     public final void run() {
         JSONObject o;
         try {
+            System.out.println("Handler method being called!");
             o = handle(ds, stmts, req);
+            System.out.println("Handler method returned.");
             o.put("status", "OK");
         } catch(SQLException e) {
             e.printStackTrace();
@@ -58,6 +60,7 @@ public abstract class RequestHandler implements Runnable {
         }
 
         o.put("response_to", getResponseID());
+        System.out.println("Queueing the response from handler.");
         dispatcher.queueResponse(o);
     }
 

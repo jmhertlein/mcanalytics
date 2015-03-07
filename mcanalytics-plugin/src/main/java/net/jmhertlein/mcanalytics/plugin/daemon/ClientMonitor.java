@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLSocket;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.bukkit.Bukkit;
@@ -40,7 +41,7 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class ClientMonitor implements Runnable {
-    private final Socket client;
+    private final SSLSocket client;
     private final Semaphore shutdownGuard;
     private volatile boolean shutdown;
     private final ExecutorService workers;
@@ -48,7 +49,7 @@ public class ClientMonitor implements Runnable {
     private PrintWriter out;
     private BufferedReader in;
 
-    public ClientMonitor(DataSource connections, StatementProvider stmts, ExecutorService workers, Socket client) {
+    public ClientMonitor(DataSource connections, StatementProvider stmts, ExecutorService workers, SSLSocket client) {
         this.client = client;
         this.workers = workers;
         dispatcher = new RequestDispatcher(connections, stmts, workers);
@@ -77,11 +78,16 @@ public class ClientMonitor implements Runnable {
                 synchronized(queue) {
                     try {
                         queue.wait();
+                        System.out.println("CL-WRITE: Got something to write!");
                     } catch(InterruptedException ex) {
                     }
                 }
             } else {
-                out.println(queue.remove().toString());
+                String w = queue.remove().toString();
+                System.out.println("CL-WRITE: WRITING THIS:=======================");
+                System.out.println(w);
+                System.out.println("==============================================");
+                out.println(w);
                 out.flush();
             }
         }
@@ -105,6 +111,7 @@ public class ClientMonitor implements Runnable {
                     return;
                 }
                 o = new JSONObject(s);
+                System.out.println("Got a request.");
             } catch(SocketException | EOFException se) {
                 return;
             } catch(IOException ex) {
@@ -116,6 +123,7 @@ public class ClientMonitor implements Runnable {
                 continue;
             }
             dispatcher.submitJob(o);
+            System.out.println("Submitted job, returning to read loop.");
         }
     }
 

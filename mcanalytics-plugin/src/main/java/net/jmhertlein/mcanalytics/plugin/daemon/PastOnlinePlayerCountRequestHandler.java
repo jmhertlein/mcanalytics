@@ -41,6 +41,7 @@ public class PastOnlinePlayerCountRequestHandler extends RequestHandler {
 
     @Override
     public JSONObject handle(DataSource connections, StatementProvider stmts, JSONObject req) throws SQLException {
+        System.out.println("Handler: starting...");
         Connection conn = connections.getConnection();
         PreparedStatement stmt = conn.prepareStatement(stmts.get(SQLString.GET_HOURLY_PLAYER_COUNTS));
 
@@ -61,7 +62,7 @@ public class PastOnlinePlayerCountRequestHandler extends RequestHandler {
         res.close();
         stmt.close();
         conn.close();
-
+        System.out.println("Handler: done, returning.");
         return ret;
     }
 }
