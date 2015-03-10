@@ -153,26 +153,4 @@ public class AuthenticationRequestHandler extends RequestHandler {
 
         return hash;
     }
-
-    public static void main(String[] args) {
-        Security.addProvider(new BouncyCastleProvider());
-        Random gen = new SecureRandom();
-        byte[] salt = new byte[]{0x11, 0x22, 0x33, 0x44, 0x55, 0x01, 0x02, 0x03};
-        byte[] pass;
-        try {
-            pass = "hello world this is my pass".getBytes("UTF-8");
-        } catch(UnsupportedEncodingException ex) {
-            Logger.getLogger(AuthenticationRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-        }
-
-        try {
-            byte[] hash = hash(pass, salt);
-            System.out.println(Base64.encode(hash));
-        } catch(NoSuchAlgorithmException ex) {
-            Logger.getLogger(AuthenticationRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
-        } catch(NoSuchProviderException ex) {
-            Logger.getLogger(AuthenticationRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 }
