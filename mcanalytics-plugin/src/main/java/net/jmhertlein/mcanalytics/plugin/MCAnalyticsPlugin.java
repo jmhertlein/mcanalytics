@@ -137,6 +137,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         try(Connection conn = connections.getConnection(); Statement s = conn.createStatement()) {
             s.execute(stmts.get(SQLString.CREATE_HOURLY_PLAYER_COUNT));
             s.execute(stmts.get(SQLString.CREATE_NEW_PLAYER_LOGIN));
+            s.execute(stmts.get(SQLString.CREATE_PASSWORD_TABLE));
         } catch(SQLException ex) {
             Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
