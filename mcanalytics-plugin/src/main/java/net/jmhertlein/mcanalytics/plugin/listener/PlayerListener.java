@@ -16,9 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.plugin.listener;
 
-import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
-import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,19 +28,15 @@ import org.bukkit.event.player.PlayerLoginEvent;
  */
 public class PlayerListener implements Listener {
     private final MCAnalyticsPlugin plugin;
-    private final DataSource connections;
-    private final StatementProvider stmts;
 
-    public PlayerListener(MCAnalyticsPlugin plugin, DataSource connections, StatementProvider stmts) {
+    public PlayerListener(MCAnalyticsPlugin plugin) {
         this.plugin = plugin;
-        this.connections = connections;
-        this.stmts = stmts;
     }
 
     @EventHandler
     public void onPlayerLogin(PlayerLoginEvent e) {
         if(!e.getPlayer().hasPlayedBefore()) {
-            WriteFirstLoginTask f = new WriteFirstLoginTask(e.getPlayer(), plugin, connections, stmts);
+            WriteFirstLoginTask f = new WriteFirstLoginTask(e.getPlayer(), plugin);
             f.gather();
             Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
         }

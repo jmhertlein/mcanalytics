@@ -127,7 +127,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     private void setupTimedHooks() {
         cron = Executors.newSingleThreadScheduledExecutor();
         cron.scheduleAtFixedRate(() -> {
-            WritePlayerCountTask t = new WritePlayerCountTask(this, connections, stmts);
+            WritePlayerCountTask t = new WritePlayerCountTask(this);
             t.gather();
             Bukkit.getScheduler().runTask(this, t);
         }, 0, 1, TimeUnit.MINUTES);
@@ -150,7 +150,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     }
 
     private void setupListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerListener(this, connections, stmts), this);
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }
 
     private void setupCommands() {
@@ -193,6 +193,14 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         } catch(KeyStoreException ex) {
             getLogger().log(Level.SEVERE, "Error creating server's identity: {0}", ex.getLocalizedMessage());
         }
+    }
+
+    public DataSource getConnectionPool() {
+        return connections;
+    }
+
+    public StatementProvider getStmts() {
+        return stmts;
     }
 
 }

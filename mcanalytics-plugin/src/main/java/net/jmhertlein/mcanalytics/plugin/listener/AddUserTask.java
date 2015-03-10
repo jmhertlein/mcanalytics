@@ -17,46 +17,34 @@
 package net.jmhertlein.mcanalytics.plugin.listener;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
-import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.entity.Player;
 
 /**
  *
  * @author joshua
  */
-public class WriteFirstLoginTask extends WriteTask {
-    private Player pl;
-    private LocalDateTime loginTime;
-    private UUID id;
-    private String name;
+public class AddUserTask extends WriteTask {
+    private String username, password;
 
-    public WriteFirstLoginTask(Player pl, MCAnalyticsPlugin p) {
+    public AddUserTask(String username, String password, MCAnalyticsPlugin p) {
         super(p);
-        this.pl = pl;
+        this.username = username;
+        this.password = password;
     }
 
     @Override
     public void gather() {
-        loginTime = LocalDateTime.now();
-        id = pl.getUniqueId();
-        name = pl.getName();
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
-        try(PreparedStatement p = c.prepareStatement(stmts.get(SQLString.ADD_NEW_PLAYER_LOGIN))) {
-            p.setTimestamp(1, Timestamp.valueOf(loginTime));
-            p.setString(2, id.toString());
-            p.setString(3, name);
-            p.execute();
-        }
+        byte[] salt = SSLUtil.newSalt();
+        throw new UnsupportedOperationException();
+        // TODO: finish implementing this- still need the SQL file + enum
     }
 
 }

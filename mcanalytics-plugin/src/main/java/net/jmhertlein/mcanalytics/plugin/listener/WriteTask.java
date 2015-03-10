@@ -30,14 +30,14 @@ import org.bukkit.scheduler.BukkitRunnable;
  * @author joshua
  */
 public abstract class WriteTask extends BukkitRunnable {
-    private MCAnalyticsPlugin p;
-    private DataSource ds;
-    private StatementProvider stmts;
+    private final MCAnalyticsPlugin p;
+    private final DataSource ds;
+    private final StatementProvider stmts;
 
-    public WriteTask(MCAnalyticsPlugin p, DataSource ds, StatementProvider stmts) {
+    public WriteTask(MCAnalyticsPlugin p) {
         this.p = p;
-        this.ds = ds;
-        this.stmts = stmts;
+        this.ds = p.getConnectionPool();
+        this.stmts = p.getStmts();
     }
 
     public abstract void gather();

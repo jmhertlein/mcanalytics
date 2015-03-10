@@ -27,9 +27,9 @@ import org.bukkit.command.CommandSender;
  */
 public class AnalyticsCommandDefinition implements CommandDefinition {
 
-    @CommandMethod(path = "mca adduser", requiredArgs = 1, permNode = "mca.adduser")
-    public void createNewUser(String name) {
-        throw new UnsupportedOperationException();
+    @CommandMethod(path = "mca adduser", requiredArgs = 2, permNode = "mca.adduser")
+    public void createNewUser(String name, String password) {
+
     }
 
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")

@@ -34,8 +34,8 @@ import org.bukkit.Bukkit;
 public class WritePlayerCountTask extends WriteTask {
     private int players;
 
-    public WritePlayerCountTask(MCAnalyticsPlugin p, DataSource ds, StatementProvider stmts) {
-        super(p, ds, stmts);
+    public WritePlayerCountTask(MCAnalyticsPlugin p) {
+        super(p);
     }
 
     @Override

@@ -21,7 +21,6 @@ import java.io.EOFException;
 import net.jmhertlein.mcanalytics.api.request.Request;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.net.SocketException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

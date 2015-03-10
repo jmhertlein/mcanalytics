@@ -17,29 +17,20 @@
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
 import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
-import org.bouncycastle.asn1.x500.RDN;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -65,7 +56,7 @@ public class AuthenticationRequestHandler extends RequestHandler {
             success = authenticateWithPassword(request, conn, stmts, username);
         } else if(m == AuthenticationMethod.TRUST) {
             success = Stream.of(c.getSocket().getSession().getPeerCertificates())
-                    .map(crt -> getCNs((X509Certificate) crt))
+                    .map(crt -> SSLUtil.getCNs((X509Certificate) crt))
                     .anyMatch(names -> names.contains(username));
         } else {
             throw new Exception("Invalid authentication method.");
@@ -91,57 +82,8 @@ public class AuthenticationRequestHandler extends RequestHandler {
             }
         }
 
-        byte[] computedHash = hash(password, salt);
+        byte[] computedHash = SSLUtil.hash(password, salt);
 
         return Arrays.equals(storedHash, computedHash);
-    }
-
-    /**
-     * Gets the common names of the subject of an X509Certificate
-     *
-     * based on:
-     * https://stackoverflow.com/questions/2914521/how-to-extract-cn-from-x509certificate-in-java
-     *
-     * Also note CN is indeed a multi-valued attribute:
-     * https://tools.ietf.org/html/rfc4519#section-2.3
-     *
-     * I'm pretty sure the outer loop will return only one RDN, but the inner loop can return many.
-     *
-     * @param cert
-     * @return a list of all CNs, or an empty list if the certificate's encoding is invalid
-     */
-    private static Set<String> getCNs(X509Certificate cert) {
-        Set<String> names = new HashSet<>();
-        X500Name x500name;
-        try {
-            x500name = new JcaX509CertificateHolder(cert).getSubject();
-        } catch(CertificateEncodingException cee) {
-            return names;
-        }
-
-        for(RDN rdn : x500name.getRDNs(BCStyle.CN)) {
-            for(AttributeTypeAndValue atv : rdn.getTypesAndValues()) {
-                names.add(IETFUtils.valueToString(atv.getValue()));
-            }
-        }
-
-        return names;
-    }
-
-    private static byte[] hash(byte[] pass, byte[] salt) throws NoSuchAlgorithmException, NoSuchProviderException {
-        final int PASSES = 10000;
-        MessageDigest mda = MessageDigest.getInstance("SHA-512", "BC");
-        mda.update(salt);
-        mda.update(pass);
-        byte[] hash = mda.digest();
-
-        for(int i = 0; i < PASSES; i++) {
-            mda.update(hash);
-            mda.update(salt);
-            mda.update(pass);
-            hash = mda.digest();
-        }
-
-        return hash;
     }
 }

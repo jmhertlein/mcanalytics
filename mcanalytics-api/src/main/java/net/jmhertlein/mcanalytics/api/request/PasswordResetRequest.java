@@ -16,33 +16,29 @@
  */
 package net.jmhertlein.mcanalytics.api.request;
 
-import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public class AuthenticationRequest extends Request<Boolean> {
-    private AuthenticationMethod m;
-    private String password, username;
+public class PasswordResetRequest extends Request<Boolean> {
+    private String newPass, oldPass, username;
+
+    @Override
+    public String toJSON() {
+        JSONObject ret = new JSONObject();
+        ret.put("id", requestId);
+        ret.put("type", RequestType.PASSWORD_RESET_REQUEST);
+        ret.put("username", username);
+        ret.put("old", oldPass);
+        ret.put("new", newPass);
+        return ret.toString();
+    }
 
     @Override
     public Boolean call() throws Exception {
         return response.getString("status").equals("OK");
     }
 
-    @Override
-    public String toJSON() {
-        JSONObject o = new JSONObject();
-
-        o.put("type", RequestType.AUTHENTICATION_REQUEST.toString());
-        o.put("id", requestId);
-        o.put("method", m.name());
-        o.put("username", username);
-        if(m == AuthenticationMethod.PASSWORD)
-            o.put("password", password);
-
-        return o.toString();
-    }
 }
