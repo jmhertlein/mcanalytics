@@ -16,7 +16,10 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
@@ -42,17 +45,22 @@ public abstract class RequestHandler implements Runnable {
         return req.getLong("id");
     }
 
-    public abstract JSONObject handle(DataSource ds, StatementProvider stmts, JSONObject request) throws SQLException;
+    public abstract JSONObject handle(Connection conn, StatementProvider stmts, JSONObject request, ClientMonitor client) throws Exception;
+
+    public boolean needsAuth() {
+        return true;
+    }
 
     @Override
     public final void run() {
         JSONObject o;
-        try {
+        try(Connection conn = ds.getConnection()) {
             System.out.println("Handler method being called!");
-            o = handle(ds, stmts, req);
+            checkAuthentication();
+            o = handle(conn, stmts, req, dispatcher.getClient());
             System.out.println("Handler method returned.");
             o.put("status", "OK");
-        } catch(SQLException e) {
+        } catch(Exception e) {
             e.printStackTrace();
             o = new JSONObject();
             o.put("status", "ERROR");
@@ -62,6 +70,11 @@ public abstract class RequestHandler implements Runnable {
         o.put("response_to", getResponseID());
         System.out.println("Queueing the response from handler.");
         dispatcher.queueResponse(o);
+    }
+
+    private void checkAuthentication() throws NotAuthenticatedException {
+        if(needsAuth() && !dispatcher.getClient().isAuthenticated())
+            throw new NotAuthenticatedException();
     }
 
 }

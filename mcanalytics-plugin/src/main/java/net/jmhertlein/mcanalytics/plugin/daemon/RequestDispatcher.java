@@ -32,8 +32,10 @@ public class RequestDispatcher {
     private final ConcurrentLinkedQueue<JSONObject> writeQueue;
     private final DataSource connections;
     private final StatementProvider stmts;
+    private final ClientMonitor client;
 
-    public RequestDispatcher(DataSource connections, StatementProvider stmts, ExecutorService workers) {
+    public RequestDispatcher(ClientMonitor owner, DataSource connections, StatementProvider stmts, ExecutorService workers) {
+        this.client = owner;
         this.workers = workers;
         writeQueue = new ConcurrentLinkedQueue<>();
         this.connections = connections;
@@ -58,9 +60,12 @@ public class RequestDispatcher {
         return writeQueue;
     }
 
+    public ClientMonitor getClient() {
+        return client;
+    }
+
     private Runnable getHandlerForRequestJSON(JSONObject job) {
         RequestType type = RequestType.valueOf(job.getString("type"));
-        long id = job.getLong("id");
         Runnable ret;
         switch(type) {
             case ONLINE_PLAYER_COUNT:

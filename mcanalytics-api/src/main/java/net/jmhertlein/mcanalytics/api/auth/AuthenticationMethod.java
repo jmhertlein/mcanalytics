@@ -14,26 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.api.request;
-
-import java.util.concurrent.Callable;
-import org.json.JSONObject;
+package net.jmhertlein.mcanalytics.api.auth;
 
 /**
  *
  * @author joshua
  */
-public abstract class Request<T> implements Callable<T> {
-    protected JSONObject response;
-    protected long requestId;
-
-    public void setResponse(JSONObject json) {
-        response = json;
-    }
-
-    public abstract String toJSON();
-
-    public void setRequestID(long requestID) {
-        this.requestId = requestID;
-    }
+public enum AuthenticationMethod {
+    PASSWORD, TRUST;
 }

@@ -1,0 +1,1 @@
+SELECT password_hash,salt FROM Password WHERE user_name=?;

@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
+import java.sql.Connection;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
@@ -31,7 +32,7 @@ public class OnlinePlayerCountRequestHandler extends RequestHandler {
     }
 
     @Override
-    public JSONObject handle(DataSource ds, StatementProvider stmts, JSONObject req) {
+    public JSONObject handle(Connection c, StatementProvider stmts, JSONObject req, ClientMonitor cl) {
         JSONObject result = new JSONObject();
         int players = 5;
         result.put("count", players);

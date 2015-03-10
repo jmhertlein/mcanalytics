@@ -22,22 +22,18 @@ import org.json.JSONObject;
  *
  * @author joshua
  */
-public class OnlinePlayerCountRequest implements Request<Integer> {
-    private final Parameters p;
+public class OnlinePlayerCountRequest extends Request<Integer> {
     private JSONObject response;
 
     public OnlinePlayerCountRequest() {
-        p = new Parameters();
     }
 
     @Override
     public String toJSON() {
-        return p.toJSON().toString();
-    }
-
-    @Override
-    public void setResponse(JSONObject json) {
-        response = json;
+        JSONObject ret = new JSONObject();
+        ret.put("id", requestId);
+        ret.put("type", RequestType.ONLINE_PLAYER_COUNT);
+        return ret.toString();
     }
 
     @Override
@@ -45,35 +41,4 @@ public class OnlinePlayerCountRequest implements Request<Integer> {
         System.out.println("call() was called in OnlinePlayerCountRequest");
         return response.getInt("count");
     }
-
-    @Override
-    public void setRequestID(long requestID) {
-        p.setRequestID(requestID);
-    }
-
-    public static class Parameters {
-        private long requestID;
-
-        public long getRequestID() {
-            return requestID;
-        }
-
-        public void setRequestID(long requestID) {
-            this.requestID = requestID;
-        }
-
-        public JSONObject toJSON() {
-            JSONObject ret = new JSONObject();
-            ret.put("id", requestID);
-            ret.put("type", RequestType.ONLINE_PLAYER_COUNT);
-            return ret;
-        }
-
-        public static Parameters fromJSON(JSONObject o) {
-            Parameters p = new Parameters();
-            p.requestID = o.getLong("id");
-            return p;
-        }
-    }
-
 }

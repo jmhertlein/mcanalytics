@@ -24,22 +24,12 @@ import org.json.JSONObject;
  *
  * @author joshua
  */
-public class PastOnlinePlayerCountRequest implements Request<LinkedHashMap<LocalDateTime, Integer>> {
-    private final Parameters p;
-    private JSONObject response;
+public class PastOnlinePlayerCountRequest extends Request<LinkedHashMap<LocalDateTime, Integer>> {
+    LocalDateTime start, end;
 
     public PastOnlinePlayerCountRequest(LocalDateTime start, LocalDateTime end) {
-        p = new Parameters(start, end);
-    }
-
-    @Override
-    public String toJSON() {
-        return p.toJSON().toString();
-    }
-
-    @Override
-    public void setResponse(JSONObject json) {
-        response = json;
+        this.start = start;
+        this.end = end;
     }
 
     @Override
@@ -55,51 +45,12 @@ public class PastOnlinePlayerCountRequest implements Request<LinkedHashMap<Local
     }
 
     @Override
-    public void setRequestID(long requestID) {
-        p.setRequestID(requestID);
-    }
-
-    public static class Parameters {
-        private long requestID;
-        private final LocalDateTime start, end;
-
-        public LocalDateTime getStart() {
-            return start;
-        }
-
-        public LocalDateTime getEnd() {
-            return end;
-        }
-
-        private Parameters(LocalDateTime start, LocalDateTime end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        public long getRequestID() {
-            return requestID;
-        }
-
-        public void setRequestID(long requestID) {
-            this.requestID = requestID;
-        }
-
-        public JSONObject toJSON() {
-            JSONObject ret = new JSONObject();
-            ret.put("id", requestID);
-            ret.put("type", RequestType.PAST_ONLINE_PLAYER_COUNT);
-            ret.put("start", start.toString());
-            ret.put("end", end.toString());
-            return ret;
-        }
-
-        public static Parameters fromJSON(JSONObject o) {
-            long requestID = o.getLong("id");
-            LocalDateTime start = LocalDateTime.parse(o.getString("start"));
-            LocalDateTime end = LocalDateTime.parse(o.getString("end"));
-            Parameters p = new Parameters(start, end);
-            p.requestID = requestID;
-            return p;
-        }
+    public String toJSON() {
+        JSONObject ret = new JSONObject();
+        ret.put("id", requestId);
+        ret.put("type", RequestType.PAST_ONLINE_PLAYER_COUNT);
+        ret.put("start", start.toString());
+        ret.put("end", end.toString());
+        return ret.toString();
     }
 }

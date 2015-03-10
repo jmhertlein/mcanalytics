@@ -45,16 +45,19 @@ public class ClientMonitor implements Runnable {
     private final Semaphore shutdownGuard;
     private volatile boolean shutdown;
     private final ExecutorService workers;
-    private final RequestDispatcher dispatcher;
+    private RequestDispatcher dispatcher;
+    private volatile String username;
+    private volatile boolean authenticated;
     private PrintWriter out;
     private BufferedReader in;
 
     public ClientMonitor(DataSource connections, StatementProvider stmts, ExecutorService workers, SSLSocket client) {
         this.client = client;
         this.workers = workers;
-        dispatcher = new RequestDispatcher(connections, stmts, workers);
         shutdown = false;
+        authenticated = false;
         shutdownGuard = new Semaphore(1);
+        dispatcher = new RequestDispatcher(this, connections, stmts, workers);
     }
 
     @Override
@@ -69,6 +72,26 @@ public class ClientMonitor implements Runnable {
 
         workers.submit(() -> read(in));
         workers.submit(() -> write(out));
+    }
+
+    public SSLSocket getSocket() {
+        return client;
+    }
+
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
+
+    public void setAuthenticated(boolean authenticated) {
+        this.authenticated = authenticated;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     private void write(PrintWriter out) {
@@ -130,22 +153,26 @@ public class ClientMonitor implements Runnable {
     public void close() throws IOException {
         try {
             shutdownGuard.acquire();
+            try {
+                if(!shutdown) {
+                    shutdown = true;
+                    out.close();
+                    in.close();
+                    client.close();
+                    ConcurrentLinkedQueue<JSONObject> writeQueue = this.dispatcher.getWriteQueue();
+                    synchronized(writeQueue) {
+                        writeQueue.notifyAll();
+                    }
+                    System.out.println("Client: All closed!");
+                }
+            } finally {
+                // this is nested oddly because we want to ensure release() is called IFF acquire was called first
+                shutdownGuard.release();
+            }
         } catch(InterruptedException ex) {
             Logger.getLogger(ClientMonitor.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        if(!shutdown) {
-            shutdown = true;
-            out.close();
-            in.close();
-            client.close();
-            ConcurrentLinkedQueue<JSONObject> writeQueue = this.dispatcher.getWriteQueue();
-            synchronized(writeQueue) {
-                writeQueue.notifyAll();
-            }
-            System.out.println("Client: All closed!");
-        }
-        shutdownGuard.release();
     }
 
     @Override

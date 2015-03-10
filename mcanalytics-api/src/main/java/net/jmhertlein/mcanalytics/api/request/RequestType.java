@@ -22,7 +22,8 @@ package net.jmhertlein.mcanalytics.api.request;
  */
 public enum RequestType {
     ONLINE_PLAYER_COUNT,
-    PAST_ONLINE_PLAYER_COUNT;
+    PAST_ONLINE_PLAYER_COUNT,
+    AUTHENTICATION_REQUEST;
 
     @Override
     public String toString() {

@@ -16,24 +16,32 @@
  */
 package net.jmhertlein.mcanalytics.api.request;
 
-import java.util.concurrent.Callable;
+import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public abstract class Request<T> implements Callable<T> {
-    protected JSONObject response;
-    protected long requestId;
+public class AuthenticationRequest extends Request<Boolean> {
+    private AuthenticationMethod m;
+    private String password;
 
-    public void setResponse(JSONObject json) {
-        response = json;
+    @Override
+    public Boolean call() throws Exception {
+        return response.getString("status").equals("OK");
     }
 
-    public abstract String toJSON();
+    @Override
+    public String toJSON() {
+        JSONObject o = new JSONObject();
 
-    public void setRequestID(long requestID) {
-        this.requestId = requestID;
+        o.put("type", RequestType.AUTHENTICATION_REQUEST.toString());
+        o.put("id", requestId);
+        o.put("method", m.name());
+        if(m == AuthenticationMethod.PASSWORD)
+            o.put("password", password);
+
+        return o.toString();
     }
 }

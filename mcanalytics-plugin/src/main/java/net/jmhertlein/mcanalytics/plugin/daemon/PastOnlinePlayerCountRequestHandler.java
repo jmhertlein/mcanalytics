@@ -21,10 +21,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
-import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest.Parameters;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.json.JSONObject;
@@ -40,16 +40,13 @@ public class PastOnlinePlayerCountRequestHandler extends RequestHandler {
     }
 
     @Override
-    public JSONObject handle(DataSource connections, StatementProvider stmts, JSONObject req) throws SQLException {
+    public JSONObject handle(Connection conn, StatementProvider stmts, JSONObject req, ClientMonitor c) throws SQLException {
         System.out.println("Handler: starting...");
-        Connection conn = connections.getConnection();
         PreparedStatement stmt = conn.prepareStatement(stmts.get(SQLString.GET_HOURLY_PLAYER_COUNTS));
 
-        Parameters args = Parameters.fromJSON(req);
-
         stmt.clearParameters();
-        stmt.setTimestamp(1, Timestamp.valueOf(args.getStart()));
-        stmt.setTimestamp(2, Timestamp.valueOf(args.getEnd()));
+        stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.parse(req.getString("start"))));
+        stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.parse(req.getString("end"))));
         ResultSet res = stmt.executeQuery();
 
         Map<String, Integer> counts = new HashMap<>();
