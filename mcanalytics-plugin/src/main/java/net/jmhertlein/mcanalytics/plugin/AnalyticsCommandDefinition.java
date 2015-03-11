@@ -34,9 +34,10 @@ public class AnalyticsCommandDefinition implements CommandDefinition {
     }
 
     @CommandMethod(path = "mca adduser", requiredArgs = 2, permNode = "mca.adduser")
-    public void createNewUser(String name, String password) {
+    public void createNewUser(CommandSender s, String name, String password) {
         AddUserTask t = new AddUserTask(name, password, p);
         p.getServer().getScheduler().runTaskAsynchronously(p, t);
+        s.sendMessage("User added.");
     }
 
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")
