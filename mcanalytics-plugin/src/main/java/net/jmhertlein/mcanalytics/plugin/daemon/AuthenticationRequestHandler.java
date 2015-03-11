@@ -67,7 +67,12 @@ public class AuthenticationRequestHandler extends RequestHandler {
             throw new Exception("Invalid authentication method.");
         }
 
-        if(!success) {
+        if(success) {
+            c.setUsername(username);
+            c.setAuthenticated(true);
+        } else {
+            c.setUsername(null);
+            c.setAuthenticated(false);
             throw new AuthenticationException();
         }
         return resp;
