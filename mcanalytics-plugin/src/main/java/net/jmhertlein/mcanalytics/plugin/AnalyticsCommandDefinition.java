@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.plugin;
 
+import net.jmhertlein.mcanalytics.plugin.listener.AddUserTask;
 import net.jmhertlein.reflective.CommandDefinition;
 import net.jmhertlein.reflective.annotation.CommandMethod;
 import org.bukkit.ChatColor;
@@ -26,10 +27,16 @@ import org.bukkit.command.CommandSender;
  * @author joshua
  */
 public class AnalyticsCommandDefinition implements CommandDefinition {
+    private MCAnalyticsPlugin p;
+
+    public AnalyticsCommandDefinition(MCAnalyticsPlugin p) {
+        this.p = p;
+    }
 
     @CommandMethod(path = "mca adduser", requiredArgs = 2, permNode = "mca.adduser")
     public void createNewUser(String name, String password) {
-
+        AddUserTask t = new AddUserTask(name, password, p);
+        p.getServer().getScheduler().runTaskAsynchronously(p, t);
     }
 
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")

@@ -16,10 +16,17 @@
  */
 package net.jmhertlein.mcanalytics.plugin.listener;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
+import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 
 /**
@@ -43,8 +50,28 @@ public class AddUserTask extends WriteTask {
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
         byte[] salt = SSLUtil.newSalt();
-        throw new UnsupportedOperationException();
-        // TODO: finish implementing this- still need the SQL file + enum
+        byte[] pass;
+        try {
+            pass = password.getBytes("UTF-8");
+        } catch(UnsupportedEncodingException ex) {
+            Logger.getLogger(AddUserTask.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
+        byte[] hash;
+        try {
+            hash = SSLUtil.hash(pass, salt);
+        } catch(NoSuchAlgorithmException | NoSuchProviderException ex) {
+            Logger.getLogger(AddUserTask.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
+        try(PreparedStatement addUser = c.prepareStatement(stmts.get(SQLString.ADD_NEW_USER))) {
+            addUser.setString(1, username);
+            addUser.setBytes(2, hash);
+            addUser.setBytes(3, salt);
+            addUser.executeUpdate();
+        }
     }
 
 }

@@ -1,0 +1,2 @@
+INSERT INTO Password
+VALUES(?, ?, ?);

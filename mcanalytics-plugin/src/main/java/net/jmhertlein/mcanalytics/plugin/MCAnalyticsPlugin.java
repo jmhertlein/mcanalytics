@@ -155,7 +155,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     private void setupCommands() {
         TreeCommandExecutor tree = new TreeCommandExecutor();
-        tree.add(new AnalyticsCommandDefinition());
+        tree.add(new AnalyticsCommandDefinition(this));
         getServer().getPluginCommand("mca").setExecutor(tree);
         getServer().getPluginCommand("mca").setTabCompleter(new TreeTabCompleter(tree));
     }
