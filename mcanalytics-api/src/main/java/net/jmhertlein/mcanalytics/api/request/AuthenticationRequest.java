@@ -27,6 +27,12 @@ public class AuthenticationRequest extends Request<Boolean> {
     private AuthenticationMethod m;
     private String password, username;
 
+    public AuthenticationRequest(AuthenticationMethod m, String username, String password) {
+        this.m = m;
+        this.password = password;
+        this.username = username;
+    }
+
     @Override
     public Boolean call() throws Exception {
         return response.getString("status").equals("OK");

@@ -33,6 +33,11 @@ public class PasswordResetRequestHandler extends RequestHandler {
     }
 
     @Override
+    public boolean needsAuth() {
+        return false;
+    }
+
+    @Override
     public JSONObject handle(Connection conn, StatementProvider stmts, JSONObject request, ClientMonitor client) throws Exception {
         //request params
         String username, oldPass, newPass;

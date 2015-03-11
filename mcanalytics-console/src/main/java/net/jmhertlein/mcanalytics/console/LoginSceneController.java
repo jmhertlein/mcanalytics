@@ -19,11 +19,9 @@ package net.jmhertlein.mcanalytics.console;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,13 +33,13 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
@@ -50,15 +48,16 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocket;
 import net.jmhertlein.mcanalytics.api.APISocket;
+import net.jmhertlein.mcanalytics.api.FutureRequest;
+import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
+import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
 import net.jmhertlein.mcanalytics.console.gui.CertTrustPromptController;
-import net.jmhertlein.mcanalytics.console.gui.X509PaneController;
 
 /**
  * FXML Controller class
@@ -135,6 +134,21 @@ public class LoginSceneController implements Initializable {
             BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
             APISocket sock = new APISocket(out, in);
             sock.startListener();
+
+            //handle authentication
+            FutureRequest<Boolean> login = sock.submit(new AuthenticationRequest(AuthenticationMethod.PASSWORD, usernameField.getText(), passwordField.getText()));
+            System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText());
+            try {
+                boolean success = login.get();
+                if(success)
+                    System.out.println("Login successful");
+                else
+                    System.out.println("Login failed.");
+            } catch(InterruptedException | ExecutionException ex) {
+                Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Login error.");
+            }
+            //auth done
 
             FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/ChartScene.fxml"));
             Parent root = l.load();

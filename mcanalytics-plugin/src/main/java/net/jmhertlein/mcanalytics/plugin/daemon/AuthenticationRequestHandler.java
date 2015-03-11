@@ -45,6 +45,11 @@ public class AuthenticationRequestHandler extends RequestHandler {
     }
 
     @Override
+    public boolean needsAuth() {
+        return false;
+    }
+
+    @Override
     public JSONObject handle(Connection conn, StatementProvider stmts, JSONObject request, ClientMonitor c) throws Exception {
         JSONObject resp = new JSONObject();
         boolean success = false;
