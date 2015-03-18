@@ -16,6 +16,11 @@
  */
 package net.jmhertlein.mcanalytics.plugin;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.jmhertlein.mcanalytics.plugin.listener.AddUserTask;
 import net.jmhertlein.reflective.CommandDefinition;
 import net.jmhertlein.reflective.annotation.CommandMethod;
@@ -43,6 +48,19 @@ public class AnalyticsCommandDefinition implements CommandDefinition {
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")
     public void listConnectedUsers(String name) {
         throw new UnsupportedOperationException();
+    }
+
+    @CommandMethod(path = "mca deluser", requiredArgs = 1, permNode = "mca.deluser")
+    public void deleteUser(CommandSender s, String username) {
+        try(Connection c = p.getConnectionPool().getConnection();
+            PreparedStatement stmt = c.prepareStatement(p.getStmts().get(SQLString.DELETE_USER))) {
+            stmt.setString(1, username);
+            stmt.executeUpdate();
+            s.sendMessage("User \"" + username + "\"deleted.");
+        } catch(SQLException ex) {
+            Logger.getLogger(AnalyticsCommandDefinition.class.getName()).log(Level.SEVERE, null, ex);
+            s.sendMessage("Error:" + ex.getLocalizedMessage());
+        }
     }
 
     @CommandMethod(path = "mca gc", permNode = "mca.debug")
