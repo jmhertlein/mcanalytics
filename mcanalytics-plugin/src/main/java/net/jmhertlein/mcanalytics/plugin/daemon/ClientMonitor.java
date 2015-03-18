@@ -20,10 +20,7 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +30,6 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.Bukkit;
 import org.json.JSONObject;
 
 /**
@@ -42,7 +38,6 @@ import org.json.JSONObject;
  */
 public class ClientMonitor implements Runnable {
     private final SSLSocket client;
-    private final Semaphore shutdownGuard;
     private volatile boolean shutdown;
     private final ExecutorService workers;
     private RequestDispatcher dispatcher;
@@ -56,7 +51,6 @@ public class ClientMonitor implements Runnable {
         this.workers = workers;
         shutdown = false;
         authenticated = false;
-        shutdownGuard = new Semaphore(1);
         dispatcher = new RequestDispatcher(this, connections, stmts, workers);
     }
 
@@ -150,29 +144,18 @@ public class ClientMonitor implements Runnable {
         }
     }
 
-    public void close() throws IOException {
-        try {
-            shutdownGuard.acquire();
-            try {
-                if(!shutdown) {
-                    shutdown = true;
-                    out.close();
-                    in.close();
-                    client.close();
-                    ConcurrentLinkedQueue<JSONObject> writeQueue = this.dispatcher.getWriteQueue();
-                    synchronized(writeQueue) {
-                        writeQueue.notifyAll();
-                    }
-                    System.out.println("Client: All closed!");
-                }
-            } finally {
-                // this is nested oddly because we want to ensure release() is called IFF acquire was called first
-                shutdownGuard.release();
+    public synchronized void close() throws IOException {
+        if(!shutdown) {
+            shutdown = true;
+            out.close();
+            in.close();
+            client.close();
+            ConcurrentLinkedQueue<JSONObject> writeQueue = this.dispatcher.getWriteQueue();
+            synchronized(writeQueue) {
+                writeQueue.notifyAll();
             }
-        } catch(InterruptedException ex) {
-            Logger.getLogger(ClientMonitor.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Client: All closed!");
         }
-
     }
 
     @Override
