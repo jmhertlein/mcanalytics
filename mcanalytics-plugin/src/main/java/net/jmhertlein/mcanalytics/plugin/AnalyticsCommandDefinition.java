@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
 import net.jmhertlein.mcanalytics.plugin.listener.AddUserTask;
 import net.jmhertlein.reflective.CommandDefinition;
 import net.jmhertlein.reflective.annotation.CommandMethod;
@@ -46,8 +47,11 @@ public class AnalyticsCommandDefinition implements CommandDefinition {
     }
 
     @CommandMethod(path = "mca connected", requiredArgs = 1, permNode = "mca.connected")
-    public void listConnectedUsers(String name) {
-        throw new UnsupportedOperationException();
+    public void listConnectedUsers(CommandSender s) {
+        System.out.println("The following users are connected:");
+        for(ClientMonitor m : p.getDaemon().getConnectedClients()) {
+            s.sendMessage(m.getUsername());
+        }
     }
 
     @CommandMethod(path = "mca deluser", requiredArgs = 1, permNode = "mca.deluser")

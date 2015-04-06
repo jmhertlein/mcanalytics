@@ -24,7 +24,6 @@ import java.io.PrintWriter;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
@@ -40,7 +39,7 @@ public class ClientMonitor implements Runnable {
     private final SSLSocket client;
     private volatile boolean shutdown;
     private final ExecutorService workers;
-    private RequestDispatcher dispatcher;
+    private final RequestDispatcher dispatcher;
     private volatile String username;
     private volatile boolean authenticated;
     private PrintWriter out;

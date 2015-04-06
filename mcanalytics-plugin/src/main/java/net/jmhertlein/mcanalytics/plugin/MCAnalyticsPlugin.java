@@ -19,7 +19,6 @@ package net.jmhertlein.mcanalytics.plugin;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyPair;
@@ -201,6 +200,10 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     public StatementProvider getStmts() {
         return stmts;
+    }
+
+    public ConsoleDaemon getDaemon() {
+        return d;
     }
 
 }

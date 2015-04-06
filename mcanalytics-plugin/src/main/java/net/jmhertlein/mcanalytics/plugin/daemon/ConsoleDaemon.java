@@ -16,14 +16,14 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.security.KeyStore;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -48,12 +48,14 @@ public class ConsoleDaemon {
     private final DataSource connections;
     private final StatementProvider stmts;
     private final KeyStore trustMaterial;
+    private final Map<ClientMonitor, Boolean> clients;
 
     public ConsoleDaemon(KeyStore trustMaterial, DataSource connections, StatementProvider stmts) {
         workers = Executors.newCachedThreadPool();
         this.connections = connections;
         this.stmts = stmts;
         this.trustMaterial = trustMaterial;
+        this.clients = new WeakHashMap<>();
     }
 
     public void startListening() {
@@ -86,8 +88,15 @@ public class ConsoleDaemon {
                 Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
                 continue;
             }
-            workers.submit(new ClientMonitor(connections, stmts, workers, client));
+
+            ClientMonitor m = new ClientMonitor(connections, stmts, workers, client);
+            workers.submit(m);
+            clients.put(m, true);
         }
+    }
+
+    public Set<ClientMonitor> getConnectedClients() {
+        return Collections.unmodifiableSet(clients.keySet());
     }
 
     public void shutdown() {
