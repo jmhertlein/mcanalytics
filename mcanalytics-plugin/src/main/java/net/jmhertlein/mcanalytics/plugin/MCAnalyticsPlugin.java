@@ -31,20 +31,15 @@ import java.security.cert.CertificateException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.daemon.ConsoleDaemon;
 import net.jmhertlein.mcanalytics.plugin.listener.PlayerListener;
-import net.jmhertlein.mcanalytics.plugin.listener.WritePlayerCountTask;
 import net.jmhertlein.reflective.TreeCommandExecutor;
 import net.jmhertlein.reflective.TreeTabCompleter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.postgresql.ds.PGPoolingDataSource;
 
@@ -62,8 +57,16 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     public void onEnable() {
         Security.addProvider(new BouncyCastleProvider());
         saveDefaultConfig();
-        connectToDatabase();
-        setupDatabase();
+
+        try {
+            connectToDatabase();
+            setupDatabase();
+        } catch(Exception ex) {
+            getLogger().log(Level.SEVERE, "ERROR: COULD NOT INITIALIZE DATABASE: {0}", ex.getLocalizedMessage());
+            getLogger().severe("=====================MCANALYTICS DISABLING======================================");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         setupListeners();
         loadTrustMaterial(new File(getDataFolder(), "trust.jks"));
         startConsoleDaemon();
@@ -72,10 +75,11 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        d.shutdown();
+        if(d != null)
+            d.shutdown();
     }
 
-    private void connectToDatabase() {
+    private void connectToDatabase() throws ClassNotFoundException {
         String type = getConfig().getString("database.type"),
                 host = getConfig().getString("database.host"),
                 dbName = getConfig().getString("database.db_name"),
@@ -86,49 +90,43 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         SQLBackend dbType = SQLBackend.parse(type);
         stmts = new StatementProvider("/db", dbType);
 
-        try {
-            switch(dbType) {
-                case MYSQL:
-                    Class.forName("com.mysql.jdbc.Driver");
-                    MysqlConnectionPoolDataSource msqlpool = new MysqlConnectionPoolDataSource();
-                    msqlpool.setDatabaseName(dbName);
-                    msqlpool.setUser(user);
-                    msqlpool.setPassword(pass);
-                    msqlpool.setServerName(host);
-                    msqlpool.setPort(port);
+        switch(dbType) {
+            case MYSQL:
+                Class.forName("com.mysql.jdbc.Driver");
+                MysqlConnectionPoolDataSource msqlpool = new MysqlConnectionPoolDataSource();
+                msqlpool.setDatabaseName(dbName);
+                msqlpool.setUser(user);
+                msqlpool.setPassword(pass);
+                msqlpool.setServerName(host);
+                msqlpool.setPort(port);
 
-                    connections = msqlpool;
-                    break;
-                case POSTGRES:
-                    Class.forName("org.postgresql.Driver");
-                    PGPoolingDataSource pgpool = new PGPoolingDataSource();
-                    pgpool.setDataSourceName("mcanalytics-pg-pool");
-                    pgpool.setServerName(host);
-                    pgpool.setPortNumber(port);
-                    pgpool.setDatabaseName(dbName);
-                    pgpool.setUser(user);
-                    pgpool.setPassword(pass);
-                    pgpool.setMaxConnections(10);
+                connections = msqlpool;
+                break;
+            case POSTGRES:
+                Class.forName("org.postgresql.Driver");
+                PGPoolingDataSource pgpool = new PGPoolingDataSource();
+                pgpool.setDataSourceName("mcanalytics-pg-pool");
+                pgpool.setServerName(host);
+                pgpool.setPortNumber(port);
+                pgpool.setDatabaseName(dbName);
+                pgpool.setUser(user);
+                pgpool.setPassword(pass);
+                pgpool.setMaxConnections(10);
 
-                    connections = pgpool;
-                    break;
-                default:
-                    getLogger().severe("ERROR: unsupported database type in config.yml");
-            }
-        } catch(ClassNotFoundException ex) {
-            getLogger().log(Level.SEVERE, "Could not find JDBC driver: {0}", ex.getLocalizedMessage());
+                connections = pgpool;
+                break;
+            default:
+                throw new IllegalStateException("unsupported database type in config.yml");
         }
+
     }
 
-    private void setupDatabase() {
+    private void setupDatabase() throws SQLException {
         try(Connection conn = connections.getConnection(); Statement s = conn.createStatement()) {
             s.execute(stmts.get(SQLString.CREATE_HOURLY_PLAYER_COUNT));
             s.execute(stmts.get(SQLString.CREATE_NEW_PLAYER_LOGIN));
             s.execute(stmts.get(SQLString.CREATE_PASSWORD_TABLE));
-        } catch(SQLException ex) {
-            Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     private void startConsoleDaemon() {
