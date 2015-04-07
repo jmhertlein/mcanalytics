@@ -21,7 +21,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
@@ -33,6 +32,7 @@ import org.bukkit.Bukkit;
  */
 public class WritePlayerCountTask extends WriteTask {
     private int players;
+    private LocalDateTime instant;
 
     public WritePlayerCountTask(MCAnalyticsPlugin p) {
         super(p);
@@ -41,12 +41,18 @@ public class WritePlayerCountTask extends WriteTask {
     @Override
     public void gather() {
         players = Bukkit.getOnlinePlayers().size();
+        instant = LocalDateTime.now();
+    }
+
+    public void gather(int onlineCount) {
+        players = onlineCount;
+        instant = LocalDateTime.now();
     }
 
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
         try(PreparedStatement addNewCount = c.prepareStatement(stmts.get(SQLString.ADD_HOURLY_PLAYER_COUNT))) {
-            addNewCount.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            addNewCount.setTimestamp(1, Timestamp.valueOf(instant));
             addNewCount.setInt(2, players);
             addNewCount.execute();
         }

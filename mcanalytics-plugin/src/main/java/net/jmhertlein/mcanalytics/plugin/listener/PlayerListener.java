@@ -19,8 +19,10 @@ package net.jmhertlein.mcanalytics.plugin.listener;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
  *
@@ -34,11 +36,29 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerLogin(PlayerLoginEvent e) {
+    public void firstLoginHandler(PlayerJoinEvent e) {
         if(!e.getPlayer().hasPlayedBefore()) {
             WriteFirstLoginTask f = new WriteFirstLoginTask(e.getPlayer(), plugin);
             f.gather();
             Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void playerCountLoginListener(PlayerJoinEvent e) {
+        writePlayerCount();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void playerCountLogoutListener(PlayerQuitEvent e) {
+        WritePlayerCountTask f = new WritePlayerCountTask(plugin);
+        f.gather(Bukkit.getOnlinePlayers().size() - 1);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
+    }
+
+    private void writePlayerCount() throws IllegalArgumentException {
+        WritePlayerCountTask f = new WritePlayerCountTask(plugin);
+        f.gather();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
     }
 }

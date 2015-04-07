@@ -54,7 +54,6 @@ import org.postgresql.ds.PGPoolingDataSource;
  */
 public class MCAnalyticsPlugin extends JavaPlugin {
     private DataSource connections;
-    private ScheduledExecutorService cron;
     private ConsoleDaemon d;
     private StatementProvider stmts;
     private KeyStore trustMaterial;
@@ -66,7 +65,6 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         connectToDatabase();
         setupDatabase();
         setupListeners();
-        setupTimedHooks();
         loadTrustMaterial(new File(getDataFolder(), "trust.jks"));
         startConsoleDaemon();
         setupCommands();
@@ -74,7 +72,6 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        cron.shutdown();
         d.shutdown();
     }
 
@@ -121,15 +118,6 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         } catch(ClassNotFoundException ex) {
             getLogger().log(Level.SEVERE, "Could not find JDBC driver: {0}", ex.getLocalizedMessage());
         }
-    }
-
-    private void setupTimedHooks() {
-        cron = Executors.newSingleThreadScheduledExecutor();
-        cron.scheduleAtFixedRate(() -> {
-            WritePlayerCountTask t = new WritePlayerCountTask(this);
-            t.gather();
-            Bukkit.getScheduler().runTask(this, t);
-        }, 0, 1, TimeUnit.MINUTES);
     }
 
     private void setupDatabase() {
