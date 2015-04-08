@@ -46,6 +46,11 @@
       <version>9.4-1200-jdbc41</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.10</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -63,6 +68,18 @@
               <createDependencyReducedPom>false</createDependencyReducedPom>
               <minimizeJar>true</minimizeJar>
               <filters>
+                <filter>
+                  <artifact>org.bouncycastle:bcprov-jdk15on</artifact>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.bouncycastle:bcpkix-jdk15on</artifact>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                </filter>
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>

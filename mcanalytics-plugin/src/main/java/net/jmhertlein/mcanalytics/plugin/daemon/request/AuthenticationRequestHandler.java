@@ -33,6 +33,7 @@ import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import net.jmhertlein.mcanalytics.plugin.daemon.AuthenticationException;
 import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,8 +90,8 @@ public class AuthenticationRequestHandler extends RequestHandler {
             try(ResultSet res = getHashSalt.executeQuery()) {
                 if(!res.first())
                     return false;
-                storedHash = res.getBytes("password_hash");
-                salt = res.getBytes("salt");
+                storedHash = Base64.decodeBase64(res.getString("password_hash"));
+                salt = Base64.decodeBase64(res.getString("salt"));
             }
         }
 

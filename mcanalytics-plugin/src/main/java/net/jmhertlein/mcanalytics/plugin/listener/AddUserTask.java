@@ -28,13 +28,14 @@ import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
  * @author joshua
  */
 public class AddUserTask extends WriteTask {
-    private String username, password;
+    private final String username, password;
 
     public AddUserTask(String username, String password, MCAnalyticsPlugin p) {
         super(p);
@@ -63,8 +64,8 @@ public class AddUserTask extends WriteTask {
 
         try(PreparedStatement addUser = c.prepareStatement(stmts.get(SQLString.ADD_NEW_USER))) {
             addUser.setString(1, username);
-            addUser.setBytes(2, hash);
-            addUser.setBytes(3, salt);
+            addUser.setString(2, Base64.encodeBase64String(hash));
+            addUser.setString(3, Base64.encodeBase64String(salt));
             addUser.executeUpdate();
         }
     }

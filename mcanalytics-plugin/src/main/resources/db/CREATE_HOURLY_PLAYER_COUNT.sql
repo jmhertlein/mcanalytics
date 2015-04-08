@@ -1,4 +1,4 @@
 CREATE TABLE IF NOT EXISTS OnlinePlayerCount(
-  instant DATETIME PRIMARY KEY,
+  instant TIMESTAMP PRIMARY KEY,
   count INTEGER
 );

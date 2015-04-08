@@ -1,3 +1,3 @@
 UPDATE NewPlayerLogin
-SET bounced=?
-WHERE id=?;
+SET bounced=false
+WHERE id=? AND bounced=true;
