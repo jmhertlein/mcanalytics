@@ -21,7 +21,13 @@ import java.util.concurrent.FutureTask;
 import org.json.JSONObject;
 
 /**
+ * FutureRequest is a wrapper around a Request that provides a way to wait for the request to be
+ * fulfilled by the server. When a Request is submitted to the APISocket, it will wrap it in a
+ * FutureRequest. Client code can then wait on this object with the get() method (like the usual
+ * Future interface) which will block until the request is completed.
  *
+ * @see net.jmhertlein.mcanalytics.api.APISocket
+ * @see net.jmhertlein.mcanalytics.api.request.Request
  * @author joshua
  */
 public class FutureRequest<T> extends FutureTask<T> {
