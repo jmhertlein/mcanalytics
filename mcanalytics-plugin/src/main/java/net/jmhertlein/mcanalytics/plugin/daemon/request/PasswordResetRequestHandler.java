@@ -56,7 +56,7 @@ public class PasswordResetRequestHandler extends RequestHandler {
         try(PreparedStatement getHashSalt = conn.prepareStatement(stmts.get(SQLString.GET_HASHSALT_FOR_USER))) {
             getHashSalt.setString(1, username);
             try(ResultSet res = getHashSalt.executeQuery()) {
-                if(!res.first()) {
+                if(!res.next()) {
                     throw new AuthenticationException();
                 }
                 oldHash = Base64.decodeBase64(res.getString("password_hash"));
