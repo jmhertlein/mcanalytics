@@ -32,18 +32,12 @@ import org.bukkit.entity.Player;
  * @author joshua
  */
 public class WriteFirstLoginTask extends WriteTask {
-    private Player pl;
     private LocalDateTime loginTime;
     private UUID id;
     private String name;
 
     public WriteFirstLoginTask(Player pl, MCAnalyticsPlugin p) {
         super(p);
-        this.pl = pl;
-    }
-
-    @Override
-    public void gather() {
         loginTime = LocalDateTime.now();
         id = pl.getUniqueId();
         name = pl.getName();

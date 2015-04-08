@@ -35,30 +35,22 @@ public class PlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void firstLoginHandler(PlayerJoinEvent e) {
-        if(!e.getPlayer().hasPlayedBefore()) {
-            WriteFirstLoginTask f = new WriteFirstLoginTask(e.getPlayer(), plugin);
-            f.gather();
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
+        if(e.getPlayer().hasPlayedBefore()) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, new WriteBounceUpdateTask(plugin, e.getPlayer()));
+        } else {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, new WriteFirstLoginTask(e.getPlayer(), plugin));
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerCountLoginListener(PlayerJoinEvent e) {
-        writePlayerCount();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new WritePlayerCountTask(plugin));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerCountLogoutListener(PlayerQuitEvent e) {
-        WritePlayerCountTask f = new WritePlayerCountTask(plugin);
-        f.gather(Bukkit.getOnlinePlayers().size() - 1);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
-    }
-
-    private void writePlayerCount() throws IllegalArgumentException {
-        WritePlayerCountTask f = new WritePlayerCountTask(plugin);
-        f.gather();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, f);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new WritePlayerCountTask(plugin, Bukkit.getOnlinePlayers().size() - 1));
     }
 }

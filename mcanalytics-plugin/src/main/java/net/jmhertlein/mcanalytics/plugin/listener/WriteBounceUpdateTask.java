@@ -17,37 +17,31 @@
 package net.jmhertlein.mcanalytics.plugin.listener;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.sql.DataSource;
+import java.util.UUID;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
+import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.OfflinePlayer;
 
 /**
  *
  * @author joshua
  */
-public abstract class WriteTask extends BukkitRunnable {
-    private final MCAnalyticsPlugin p;
-    private final DataSource ds;
-    private final StatementProvider stmts;
+public class WriteBounceUpdateTask extends WriteTask {
+    private final UUID id;
 
-    public WriteTask(MCAnalyticsPlugin p) {
-        this.p = p;
-        this.ds = p.getConnectionPool();
-        this.stmts = p.getStmts();
+    public WriteBounceUpdateTask(MCAnalyticsPlugin p, OfflinePlayer player) {
+        super(p);
+        id = player.getUniqueId();
     }
 
-    protected abstract void write(Connection c, StatementProvider stmts) throws SQLException;
-
     @Override
-    public final void run() {
-        try(Connection c = ds.getConnection()) {
-            write(c, stmts);
-        } catch(SQLException ex) {
-            Logger.getLogger(WritePlayerCountTask.class.getName()).log(Level.SEVERE, null, ex);
+    protected void write(Connection c, StatementProvider stmts) throws SQLException {
+        try(PreparedStatement updateBounced = c.prepareStatement(stmts.get(SQLString.UPDATE_BOUNCED_PLAYER))) {
+            updateBounced.setString(1, id.toString());
+            updateBounced.executeUpdate();
         }
     }
 

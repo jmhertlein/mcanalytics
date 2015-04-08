@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon;
 
+import net.jmhertlein.mcanalytics.plugin.daemon.request.RequestDispatcher;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;

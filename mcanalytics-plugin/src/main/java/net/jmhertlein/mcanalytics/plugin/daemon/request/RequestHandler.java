@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.daemon;
+package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,6 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
+import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
+import net.jmhertlein.mcanalytics.plugin.daemon.NotAuthenticatedException;
 import org.json.JSONObject;
 
 /**

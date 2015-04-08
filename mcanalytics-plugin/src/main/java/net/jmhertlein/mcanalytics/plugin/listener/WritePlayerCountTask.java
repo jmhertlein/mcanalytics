@@ -31,21 +31,18 @@ import org.bukkit.Bukkit;
  * @author joshua
  */
 public class WritePlayerCountTask extends WriteTask {
-    private int players;
-    private LocalDateTime instant;
+    private final int players;
+    private final LocalDateTime instant;
 
     public WritePlayerCountTask(MCAnalyticsPlugin p) {
         super(p);
-    }
-
-    @Override
-    public void gather() {
         players = Bukkit.getOnlinePlayers().size();
         instant = LocalDateTime.now();
     }
 
-    public void gather(int onlineCount) {
-        players = onlineCount;
+    public WritePlayerCountTask(MCAnalyticsPlugin p, int count) {
+        super(p);
+        players = count;
         instant = LocalDateTime.now();
     }
 

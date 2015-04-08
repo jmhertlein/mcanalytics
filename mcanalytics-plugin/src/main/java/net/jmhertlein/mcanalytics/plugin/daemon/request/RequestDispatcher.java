@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.daemon;
+package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.request.RequestType;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
+import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
 import org.json.JSONObject;
 
 /**

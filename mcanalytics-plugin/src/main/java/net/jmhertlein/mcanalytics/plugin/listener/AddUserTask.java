@@ -43,11 +43,6 @@ public class AddUserTask extends WriteTask {
     }
 
     @Override
-    public void gather() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
         byte[] salt = SSLUtil.newSalt();
         byte[] pass;

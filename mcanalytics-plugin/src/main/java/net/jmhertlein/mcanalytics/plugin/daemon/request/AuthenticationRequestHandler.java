@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.daemon;
+package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -31,6 +31,8 @@ import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
+import net.jmhertlein.mcanalytics.plugin.daemon.AuthenticationException;
+import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
 import org.json.JSONException;
 import org.json.JSONObject;
 
