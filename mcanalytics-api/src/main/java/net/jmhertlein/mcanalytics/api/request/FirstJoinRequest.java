@@ -16,25 +16,37 @@
  */
 package net.jmhertlein.mcanalytics.api.request;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public class PastOnlinePlayerCountRequest extends Request<LinkedHashMap<LocalDateTime, Integer>> {
-    private final LocalDateTime start, end;
+public class FirstJoinRequest extends Request<Map<LocalDateTime, Integer>> {
+    private final LocalDate start, end;
 
-    public PastOnlinePlayerCountRequest(LocalDateTime start, LocalDateTime end) {
+    public FirstJoinRequest(LocalDate start, LocalDate end) {
         this.start = start;
         this.end = end;
     }
 
     @Override
-    public LinkedHashMap<LocalDateTime, Integer> processResponse(JSONObject response) {
-        JSONObject counts = response.getJSONObject("counts");
+    public String toJSON() {
+        JSONObject ret = new JSONObject();
+        ret.put("id", getRequestId());
+        ret.put("type", RequestType.FIRST_JOINS);
+        ret.put("start", start.toString());
+        ret.put("end", end.toString());
+        return ret.toString();
+    }
+
+    @Override
+    public Map<LocalDateTime, Integer> processResponse(JSONObject response) {
+        JSONObject counts = response.getJSONObject("first_login_counts");
         LinkedHashMap<LocalDateTime, Integer> ret = new LinkedHashMap<>();
 
         for(String s : counts.keySet()) {
@@ -42,15 +54,5 @@ public class PastOnlinePlayerCountRequest extends Request<LinkedHashMap<LocalDat
         }
 
         return ret;
-    }
-
-    @Override
-    public String toJSON() {
-        JSONObject ret = new JSONObject();
-        ret.put("id", getRequestId());
-        ret.put("type", RequestType.PAST_ONLINE_PLAYER_COUNT);
-        ret.put("start", start.toString());
-        ret.put("end", end.toString());
-        return ret.toString();
     }
 }

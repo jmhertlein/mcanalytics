@@ -17,9 +17,6 @@
 package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
@@ -47,6 +44,23 @@ public abstract class RequestHandler implements Runnable {
         return req.getLong("id");
     }
 
+    /**
+     * Generates the response JSON object for the request this object handles
+     *
+     * A note to implementations: as a general rule, any object you create, *you* are responsible
+     * for destroying/closing/cleaning up. Any object passed in, you do *not* need to clean up or
+     * close- it will be closed by the caller.
+     *
+     * Following from this, you do not need to close the Connection object this method is passed.
+     * You *DO* need to close any Statements and ResultSets that you create!
+     *
+     * @param conn a connection to the database.
+     * @param stmts SQL statements for the DBMS in use
+     * @param request the JSON object received from the client
+     * @param client the client's monitor object
+     * @return the JSON object to be returned to the client
+     * @throws Exception
+     */
     public abstract JSONObject handle(Connection conn, StatementProvider stmts, JSONObject request, ClientMonitor client) throws Exception;
 
     public boolean needsAuth() {

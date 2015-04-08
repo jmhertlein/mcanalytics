@@ -76,10 +76,10 @@ public class RequestDispatcher {
                 ret = new PastOnlinePlayerCountRequestHandler(connections, stmts, this, job);
                 System.out.println("Job is a PastOnlinePlayerCountRequest");
                 break;
-            case AUTHENTICATION_REQUEST:
+            case AUTHENTICATION:
                 ret = new AuthenticationRequestHandler(connections, stmts, this, job);
                 break;
-            case PASSWORD_RESET_REQUEST:
+            case PASSWORD_RESET:
                 ret = new PasswordResetRequestHandler(connections, stmts, this, job);
                 break;
             default:

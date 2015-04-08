@@ -28,8 +28,8 @@ public class PasswordResetRequest extends Request<Boolean> {
     @Override
     public String toJSON() {
         JSONObject ret = new JSONObject();
-        ret.put("id", requestId);
-        ret.put("type", RequestType.PASSWORD_RESET_REQUEST);
+        ret.put("id", getRequestId());
+        ret.put("type", RequestType.PASSWORD_RESET);
         ret.put("username", username);
         ret.put("old", oldPass);
         ret.put("new", newPass);
@@ -37,7 +37,7 @@ public class PasswordResetRequest extends Request<Boolean> {
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public Boolean processResponse(JSONObject response) {
         return response.getString("status").equals("OK");
     }
 

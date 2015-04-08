@@ -24,8 +24,8 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class AuthenticationRequest extends Request<Boolean> {
-    private AuthenticationMethod m;
-    private String password, username;
+    private final AuthenticationMethod m;
+    private final String password, username;
 
     public AuthenticationRequest(AuthenticationMethod m, String username, String password) {
         this.m = m;
@@ -34,7 +34,7 @@ public class AuthenticationRequest extends Request<Boolean> {
     }
 
     @Override
-    public Boolean call() throws Exception {
+    public Boolean processResponse(JSONObject response) {
         return response.getString("status").equals("OK");
     }
 
@@ -42,8 +42,8 @@ public class AuthenticationRequest extends Request<Boolean> {
     public String toJSON() {
         JSONObject o = new JSONObject();
 
-        o.put("type", RequestType.AUTHENTICATION_REQUEST.toString());
-        o.put("id", requestId);
+        o.put("type", RequestType.AUTHENTICATION.toString());
+        o.put("id", getRequestId());
         o.put("method", m.name());
         o.put("username", username);
         if(m == AuthenticationMethod.PASSWORD)

@@ -23,7 +23,6 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class OnlinePlayerCountRequest extends Request<Integer> {
-    private JSONObject response;
 
     public OnlinePlayerCountRequest() {
     }
@@ -31,14 +30,13 @@ public class OnlinePlayerCountRequest extends Request<Integer> {
     @Override
     public String toJSON() {
         JSONObject ret = new JSONObject();
-        ret.put("id", requestId);
+        ret.put("id", getRequestId());
         ret.put("type", RequestType.ONLINE_PLAYER_COUNT);
         return ret.toString();
     }
 
     @Override
-    public Integer call() throws Exception {
-        System.out.println("call() was called in OnlinePlayerCountRequest");
+    public Integer processResponse(JSONObject response) {
         return response.getInt("count");
     }
 }
