@@ -1,3 +1,3 @@
 UPDATE Password
-SET password_hash=?
+SET password_hash=?,salt=?
 WHERE user_name=?;

@@ -27,6 +27,7 @@ import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import net.jmhertlein.mcanalytics.plugin.daemon.AuthenticationException;
 import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
 import org.json.JSONObject;
+import org.apache.commons.codec.binary.Base64;
 
 public class PasswordResetRequestHandler extends RequestHandler {
 
@@ -58,8 +59,8 @@ public class PasswordResetRequestHandler extends RequestHandler {
                 if(!res.first()) {
                     throw new AuthenticationException();
                 }
-                oldHash = res.getBytes("password_hash");
-                salt = res.getBytes("salt");
+                oldHash = Base64.decodeBase64(res.getString("password_hash"));
+                salt = Base64.decodeBase64(res.getString("salt"));
             }
         }
 
@@ -69,11 +70,13 @@ public class PasswordResetRequestHandler extends RequestHandler {
             throw new AuthenticationException();
         }
 
-        byte[] newHash = SSLUtil.hash(newBytes, salt);
+        byte[] newSalt = SSLUtil.newSalt();
+        byte[] newHash = SSLUtil.hash(newBytes, newSalt);
 
         try(PreparedStatement updateHash = conn.prepareStatement(stmts.get(SQLString.UPDATE_PLAYER_PASSWORD))) {
-            updateHash.setBytes(1, newHash);
-            updateHash.setString(2, username);
+            updateHash.setString(1, Base64.encodeBase64String(newHash));
+            updateHash.setString(2, Base64.encodeBase64String(newSalt));
+            updateHash.setString(3, username);
             updateHash.executeUpdate();
         }
 
