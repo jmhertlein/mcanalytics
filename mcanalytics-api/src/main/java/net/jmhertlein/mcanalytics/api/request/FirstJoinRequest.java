@@ -19,14 +19,13 @@ package net.jmhertlein.mcanalytics.api.request;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public class FirstJoinRequest extends Request<Map<LocalDateTime, Integer>> {
+public class FirstJoinRequest extends Request<LinkedHashMap<LocalDateTime, Integer>> {
     private final LocalDate start, end;
 
     public FirstJoinRequest(LocalDate start, LocalDate end) {
@@ -45,7 +44,7 @@ public class FirstJoinRequest extends Request<Map<LocalDateTime, Integer>> {
     }
 
     @Override
-    public Map<LocalDateTime, Integer> processResponse(JSONObject response) {
+    public LinkedHashMap<LocalDateTime, Integer> processResponse(JSONObject response) {
         JSONObject counts = response.getJSONObject("first_login_counts");
         LinkedHashMap<LocalDateTime, Integer> ret = new LinkedHashMap<>();
 

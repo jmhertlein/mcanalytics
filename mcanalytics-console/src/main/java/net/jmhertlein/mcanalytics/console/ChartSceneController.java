@@ -18,17 +18,20 @@ package net.jmhertlein.mcanalytics.console;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -42,6 +45,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.layout.BorderPane;
 import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
+import net.jmhertlein.mcanalytics.api.request.FirstJoinRequest;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
 
 /**
@@ -54,7 +58,7 @@ public class ChartSceneController implements Initializable {
     private APISocket sock;
 
     @FXML
-    private ChoiceBox<?> chartChooser;
+    private ChoiceBox<ChartType> chartChooser;
     @FXML
     private BorderPane chartPane;
     @FXML
@@ -76,10 +80,57 @@ public class ChartSceneController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        chartChooser.setItems(FXCollections.observableArrayList(ChartType.values()));
     }
 
     @FXML
     private void onSearch(ActionEvent event) {
+        LocalDateTime start = startDatePicker.getValue().atStartOfDay(),
+                end = endDatePicker.getValue().plusDays(1).atStartOfDay();
+        ChartType type = chartChooser.getValue();
+        if(type == null)
+            return;
+
+        switch(type) {
+            case BOUNCED_LOGINS:
+            case FIRST_LOGINS:
+                handleFirstLoginsChart(start, end);
+            case ONLINE_PLAYERS:
+                handleOnlinePlayersChart(start, end);
+            default:
+                System.out.println("I FORGOT TO PUT A CASE FOR " + type.name());
+        }
+
+    }
+
+    private LineChart<Date, Number> buildChart(LinkedHashMap<LocalDateTime, Integer> data) {
+        final DateAxis xAxis = new DateAxis();
+        final NumberAxis yAxis = new NumberAxis();
+
+        xAxis.setLabel("Time");
+        yAxis.setLabel("Players");
+        yAxis.setTickLength(5);
+        yAxis.setMinorTickLength(1);
+
+        xAxis.setAutoRanging(true);
+
+        final LineChart<Date, Number> lineChart = new LineChart<>(xAxis, yAxis);
+
+        lineChart.setTitle("Player Activity");
+
+        XYChart.Series series = new XYChart.Series();
+        series.setName("Online Players");
+
+        for(Map.Entry<LocalDateTime, Integer> e : data.entrySet()) {
+            series.getData().add(new XYChart.Data(Date.from(e.getKey().atZone(ZoneId.systemDefault()).toInstant()), e.getValue()));
+        }
+
+        lineChart.getData().add(series);
+
+        return lineChart;
+    }
+
+    private void handleOnlinePlayersChart(LocalDateTime start, LocalDateTime end) {
         FutureRequest<LinkedHashMap<LocalDateTime, Integer>> submit;
         try {
             submit = sock.submit(new PastOnlinePlayerCountRequest(
@@ -101,27 +152,8 @@ public class ChartSceneController implements Initializable {
         }
     }
 
-    private LineChart<String, Number> buildChart(LinkedHashMap<LocalDateTime, Integer> data) {
-        final CategoryAxis xAxis = new CategoryAxis();
-        final NumberAxis yAxis = new NumberAxis();
+    private void handleFirstLoginsChart(LocalDateTime start, LocalDateTime end) {
 
-        xAxis.setLabel("Time");
-        yAxis.setLabel("Players");
-
-        final LineChart<String, Number> lineChart = new LineChart<>(xAxis, yAxis);
-
-        lineChart.setTitle("Player Activity");
-
-        XYChart.Series series = new XYChart.Series();
-        series.setName("Player Login Counts");
-
-        for(Map.Entry<LocalDateTime, Integer> e : data.entrySet()) {
-            series.getData().add(new XYChart.Data(e.getKey().toString(), e.getValue()));
-        }
-
-        lineChart.getData().add(series);
-
-        return lineChart;
     }
 
 }
