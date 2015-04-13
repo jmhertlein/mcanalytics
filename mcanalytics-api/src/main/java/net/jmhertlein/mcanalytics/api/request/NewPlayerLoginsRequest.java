@@ -25,10 +25,10 @@ import org.json.JSONObject;
  *
  * @author joshua
  */
-public class FirstJoinRequest extends Request<LinkedHashMap<LocalDateTime, Integer>> {
+public class NewPlayerLoginsRequest extends Request<LinkedHashMap<LocalDateTime, Integer>> {
     private final LocalDate start, end;
 
-    public FirstJoinRequest(LocalDate start, LocalDate end) {
+    public NewPlayerLoginsRequest(LocalDate start, LocalDate end) {
         this.start = start;
         this.end = end;
     }

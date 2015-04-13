@@ -42,7 +42,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.layout.BorderPane;
 import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
-import net.jmhertlein.mcanalytics.api.request.FirstJoinRequest;
+import net.jmhertlein.mcanalytics.api.request.NewPlayerLoginsRequest;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
 
 /**
@@ -130,7 +130,7 @@ public class ChartSceneController implements Initializable {
     }
 
     private void handleFirstLoginsChart() throws IOException, InterruptedException, ExecutionException {
-        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> requestResult = sock.submit(new FirstJoinRequest(
+        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> requestResult = sock.submit(new NewPlayerLoginsRequest(
                 startDatePicker.getValue(),
                 endDatePicker.getValue().plusDays(1)
         ));
