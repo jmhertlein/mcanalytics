@@ -82,6 +82,9 @@ public class RequestDispatcher {
             case PASSWORD_RESET:
                 ret = new PasswordResetRequestHandler(connections, stmts, this, job);
                 break;
+            case NEW_PLAYER_LOGINS:
+                ret = new FirstJoinRequestHandler(connections, stmts, this, job);
+                break;
             default:
                 ret = null;
                 System.out.println("INVALID JOB");

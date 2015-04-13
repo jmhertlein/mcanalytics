@@ -21,7 +21,7 @@ package net.jmhertlein.mcanalytics.console;
  * @author joshua
  */
 public enum ChartType {
-    ONLINE_PLAYERS("Online Players"), FIRST_LOGINS("First Logins"), BOUNCED_LOGINS("Bounced Logins");
+    ONLINE_PLAYERS("Online Players"), NEW_PLAYER_LOGINS("First Logins"), BOUNCED_LOGINS("Bounced Logins");
     private final String desc;
 
     ChartType(String d) {

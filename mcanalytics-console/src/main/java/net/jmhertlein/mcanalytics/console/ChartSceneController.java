@@ -16,9 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.console;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -29,12 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -68,9 +65,6 @@ public class ChartSceneController implements Initializable {
     @FXML
     private Button searchButton;
 
-    private PrintWriter out;
-    private BufferedReader in;
-
     public void setIO(APISocket s) {
         sock = s;
     }
@@ -85,75 +79,81 @@ public class ChartSceneController implements Initializable {
 
     @FXML
     private void onSearch(ActionEvent event) {
-        LocalDateTime start = startDatePicker.getValue().atStartOfDay(),
-                end = endDatePicker.getValue().plusDays(1).atStartOfDay();
         ChartType type = chartChooser.getValue();
         if(type == null)
             return;
 
-        switch(type) {
-            case BOUNCED_LOGINS:
-            case FIRST_LOGINS:
-                handleFirstLoginsChart(start, end);
-            case ONLINE_PLAYERS:
-                handleOnlinePlayersChart(start, end);
-            default:
-                System.out.println("I FORGOT TO PUT A CASE FOR " + type.name());
+        try {
+            switch(type) {
+                case BOUNCED_LOGINS:
+                case NEW_PLAYER_LOGINS:
+                    handleFirstLoginsChart();
+                    break;
+                case ONLINE_PLAYERS:
+                    handleOnlinePlayersChart();
+                    break;
+                default:
+                    System.out.println("I FORGOT TO PUT A CASE FOR " + type.name());
+            }
+        } catch(IOException | InterruptedException | ExecutionException ex) {
+            ex.printStackTrace(System.err);
         }
 
     }
 
-    private LineChart<Date, Number> buildChart(LinkedHashMap<LocalDateTime, Integer> data) {
-        final DateAxis xAxis = new DateAxis();
-        final NumberAxis yAxis = new NumberAxis();
+    private void handleOnlinePlayersChart() throws IOException, InterruptedException, ExecutionException {
+        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> requestResult;
 
-        xAxis.setLabel("Time");
-        yAxis.setLabel("Players");
-        yAxis.setTickLength(5);
-        yAxis.setMinorTickLength(1);
+        requestResult = sock.submit(new PastOnlinePlayerCountRequest(
+                startDatePicker.getValue().atStartOfDay(),
+                endDatePicker.getValue().plusDays(1).atStartOfDay()
+        ));
 
-        xAxis.setAutoRanging(true);
+        LinkedHashMap<LocalDateTime, Integer> counts = requestResult.get();
 
-        final LineChart<Date, Number> lineChart = new LineChart<>(xAxis, yAxis);
-
-        lineChart.setTitle("Player Activity");
-
-        XYChart.Series series = new XYChart.Series();
-        series.setName("Online Players");
-
-        for(Map.Entry<LocalDateTime, Integer> e : data.entrySet()) {
+        XYChart.Series<Date, Number> series = new XYChart.Series<>();
+        for(Map.Entry<LocalDateTime, Integer> e : counts.entrySet()) {
             series.getData().add(new XYChart.Data(Date.from(e.getKey().atZone(ZoneId.systemDefault()).toInstant()), e.getValue()));
         }
-
+        final DateAxis xAxis = new DateAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Time");
+        yAxis.setLabel("Online Players");
+        yAxis.setTickLength(5);
+        yAxis.setMinorTickLength(1);
+        xAxis.setAutoRanging(true);
+        final LineChart<Date, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setTitle("Online Players");
         lineChart.getData().add(series);
-
-        return lineChart;
+        chartPane.setCenter(lineChart);
+        chartPane.layout();
     }
 
-    private void handleOnlinePlayersChart(LocalDateTime start, LocalDateTime end) {
-        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> submit;
-        try {
-            submit = sock.submit(new PastOnlinePlayerCountRequest(
-                    startDatePicker.getValue().atStartOfDay(),
-                    endDatePicker.getValue().plusDays(1).atStartOfDay()
-            ));
-        } catch(IOException ex) {
-            Logger.getLogger(ChartSceneController.class.getName()).log(Level.SEVERE, null, ex);
-            return;
+    private void handleFirstLoginsChart() throws IOException, InterruptedException, ExecutionException {
+        FutureRequest<LinkedHashMap<LocalDateTime, Integer>> requestResult = sock.submit(new FirstJoinRequest(
+                startDatePicker.getValue(),
+                endDatePicker.getValue().plusDays(1)
+        ));
+
+        LinkedHashMap<LocalDateTime, Integer> counts = requestResult.get();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        for(Map.Entry<LocalDateTime, Integer> e : counts.entrySet()) {
+            series.getData().add(new XYChart.Data(e.getKey().toString(), e.getValue()));
         }
+        series.setName("New Players");
+        final CategoryAxis xAxis = new CategoryAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Time Joined");
+        yAxis.setLabel("Players Joined");
+        yAxis.setTickLength(5);
+        yAxis.setMinorTickLength(1);
+        xAxis.setAutoRanging(true);
+        final BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+        barChart.setTitle("New Players");
+        barChart.getData().add(series);
 
-        try {
-            LinkedHashMap<LocalDateTime, Integer> counts = submit.get();
-            chartPane.setCenter(buildChart(counts));
-            chartPane.layout();
-
-        } catch(InterruptedException | ExecutionException ex) {
-            Logger.getLogger(ChartSceneController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void handleFirstLoginsChart(LocalDateTime start, LocalDateTime end) {
-
+        chartPane.setCenter(barChart);
+        chartPane.layout();
     }
 
 }

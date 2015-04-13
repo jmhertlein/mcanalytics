@@ -37,7 +37,7 @@ public class FirstJoinRequest extends Request<LinkedHashMap<LocalDateTime, Integ
     public String toJSON() {
         JSONObject ret = new JSONObject();
         ret.put("id", getRequestId());
-        ret.put("type", RequestType.FIRST_JOINS);
+        ret.put("type", RequestType.NEW_PLAYER_LOGINS);
         ret.put("start", start.toString());
         ret.put("end", end.toString());
         return ret.toString();
