@@ -19,6 +19,7 @@ package net.jmhertlein.mcanalytics.api.request;
 import org.json.JSONObject;
 
 /**
+ * A request to reset the password for the current user
  *
  * @author joshua
  */

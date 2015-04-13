@@ -18,7 +18,6 @@ package net.jmhertlein.mcanalytics.api.auth;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
 import java.security.KeyManagementException;
@@ -32,7 +31,6 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -74,8 +72,6 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
-import org.apache.commons.codec.binary.Base64;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  *
@@ -95,6 +91,15 @@ public class SSLUtil {
         }
     }
 
+    /**
+     * Creates a new self-signed X509 certificate
+     *
+     * @param pair the public/private keypair- the pubkey will be added to the cert and the private
+     * key will be used to sign the certificate
+     * @param subject the distinguished name of the subject
+     * @param isAuthority true to make the cert a CA cert, false otherwise
+     * @return
+     */
     public static X509Certificate newSelfSignedCertificate(KeyPair pair, X500Name subject, boolean isAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
                 subject,
@@ -118,6 +123,15 @@ public class SSLUtil {
         }
     }
 
+    /**
+     * Given a certificate signing request, produce a signed certificate.
+     *
+     * @param caKey
+     * @param caCert
+     * @param r
+     * @param makeAuthority
+     * @return
+     */
     public static X509Certificate fulfillCertRequest(PrivateKey caKey, X509Certificate caCert, PKCS10CertificationRequest r, boolean makeAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
                 new X500Name(caCert.getSubjectX500Principal().getName()),
@@ -171,6 +185,12 @@ public class SSLUtil {
         return ret;
     }
 
+    /**
+     * Builds an SSLConect that trusts the trust material in the KeyStore
+     *
+     * @param trustMaterial
+     * @return
+     */
     public static SSLContext buildContext(KeyStore trustMaterial) {
         SSLContext ctx;
         try {

@@ -19,6 +19,7 @@ package net.jmhertlein.mcanalytics.api.request;
 import org.json.JSONObject;
 
 /**
+ * Request to query how many players are currently logged in.
  *
  * @author joshua
  */

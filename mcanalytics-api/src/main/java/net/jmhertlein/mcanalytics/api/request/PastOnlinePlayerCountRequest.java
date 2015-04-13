@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import org.json.JSONObject;
 
 /**
+ * Request to query player count levels between two times in the past.
  *
  * @author joshua
  */

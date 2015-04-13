@@ -21,5 +21,12 @@ package net.jmhertlein.mcanalytics.api.auth;
  * @author joshua
  */
 public enum AuthenticationMethod {
-    PASSWORD, TRUST;
+    /**
+     * Login will use a password
+     */
+    PASSWORD,
+    /**
+     * Login will use trust material (usually an X509v3 certificate)
+     */
+    TRUST;
 }

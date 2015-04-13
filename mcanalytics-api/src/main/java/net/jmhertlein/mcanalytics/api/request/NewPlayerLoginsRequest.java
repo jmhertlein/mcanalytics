@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import org.json.JSONObject;
 
 /**
+ * Request object to query for new players logging in for the first time in a certain time range.
  *
  * @author joshua
  */

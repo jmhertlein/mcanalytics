@@ -20,6 +20,10 @@ import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import org.json.JSONObject;
 
 /**
+ * Request to authenticate the client to the server.
+ *
+ * The request can try to either use a password, or try logging in with a certificate to do
+ * password-less login.
  *
  * @author joshua
  */
