@@ -14,44 +14,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.console;
+package net.jmhertlein.mcanalytics.console.gui;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
 
 /**
  *
  * @author joshua
  */
-public class LocalDateTimeNumber extends Number {
-    private final LocalDateTime value;
+public class HostPane extends TitledPane {
+    private final String displayName, url;
+    private final int port;
 
-    public LocalDateTimeNumber(LocalDateTime value) {
-        this.value = value;
+    public HostPane(String displayName, String url, int port) {
+        this.displayName = displayName;
+        this.url = url;
+        this.port = port;
+
+        this.setText(displayName);
+        this.setContent(new Label(url + ":" + port));
     }
 
-    @Override
-    public int intValue() {
-        return Long.valueOf(value.atZone(ZoneId.systemDefault()).toEpochSecond()).intValue();
+    public String getDisplayName() {
+        return displayName;
     }
 
-    @Override
-    public long longValue() {
-        return value.atZone(ZoneId.systemDefault()).toEpochSecond();
+    public String getUrl() {
+        return url;
     }
 
-    @Override
-    public float floatValue() {
-        return value.atZone(ZoneId.systemDefault()).toEpochSecond();
-    }
-
-    @Override
-    public double doubleValue() {
-        return value.atZone(ZoneId.systemDefault()).toEpochSecond();
+    public int getPort() {
+        return port;
     }
 
     @Override
     public String toString() {
-        return value.toString();
+        return displayName;
     }
+
 }

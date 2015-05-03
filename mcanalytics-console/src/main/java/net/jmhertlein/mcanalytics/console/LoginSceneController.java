@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.console;
 
+import net.jmhertlein.mcanalytics.console.gui.HostPane;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,13 +106,24 @@ public class LoginSceneController implements Initializable {
             }
         }
 
+        serverList.getPanes().add(new HostPane("Josh's Test Server", "localhost", 35555));
+        serverList.getPanes().add(new HostPane("Josh's Test Server 2", "donotresolvethis", 35555));
+        serverList.getPanes().add(new HostPane("Josh's Test Server 3", "seriouslydonotresolvethis", 35555));
+        serverList.getPanes().add(new HostPane("Josh's Test Server 4", "ifthisresolvesillpunchICANN", 35555));
+
+        if(!serverList.getPanes().isEmpty())
+            serverList.setExpandedPane(serverList.getPanes().get(0));
     }
 
     @FXML
     public void onLoginButtonPressed(ActionEvent event) {
+        HostPane selected = (HostPane) serverList.getExpandedPane();
+        if(selected == null)
+            return;
+
         try {
             SSLContext ctx = SSLUtil.buildClientContext(trust);
-            SSLSocket raw = (SSLSocket) ctx.getSocketFactory().createSocket("localhost", 35555);
+            SSLSocket raw = (SSLSocket) ctx.getSocketFactory().createSocket(selected.getUrl(), selected.getPort());
             try {
                 System.out.println("Starting handshake...");
                 raw.startHandshake();
