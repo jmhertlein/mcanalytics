@@ -78,6 +78,8 @@ public class LoginSceneController implements Initializable {
     private Button loginButton;
     @FXML
     private CheckBox rememberLoginBox;
+    @FXML
+    private Button addButton, editButton, deleteButton;
 
     private KeyStore trust;
 
@@ -107,9 +109,6 @@ public class LoginSceneController implements Initializable {
         }
 
         serverList.getPanes().add(new HostPane("Josh's Test Server", "localhost", 35555));
-        serverList.getPanes().add(new HostPane("Josh's Test Server 2", "donotresolvethis", 35555));
-        serverList.getPanes().add(new HostPane("Josh's Test Server 3", "seriouslydonotresolvethis", 35555));
-        serverList.getPanes().add(new HostPane("Josh's Test Server 4", "ifthisresolvesillpunchICANN", 35555));
 
         if(!serverList.getPanes().isEmpty())
             serverList.setExpandedPane(serverList.getPanes().get(0));
@@ -173,4 +172,26 @@ public class LoginSceneController implements Initializable {
         }
     }
 
+    @FXML
+    public void addNewServer(ActionEvent event) {
+        ServerDialog d = new ServerDialog();
+        HostPane p = (HostPane) d.showAndWait().get();
+        
+        if(p != null) {
+            serverList.getPanes().add(p);
+            System.out.println("Added server: " + p.toString());
+        } else { 
+            System.out.println("Didn't add server?");
+        }
+    }
+    
+    @FXML
+    public void editServer(ActionEvent event) {
+        
+    }
+    
+    @FXML
+    public void deleteServer(ActionEvent event) {
+        
+    }
 }

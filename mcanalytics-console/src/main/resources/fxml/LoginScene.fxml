@@ -9,13 +9,6 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.jmhertlein.mcanalytics.console.LoginSceneController">
-  <left>
-    <ScrollPane hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-      <content>
-        <Accordion fx:id="serverList" />
-      </content>
-    </ScrollPane>
-  </left>
   <center>
     <AnchorPane>
       <children>
@@ -36,4 +29,18 @@
       </BorderPane.margin>
     </AnchorPane>
   </center>
+   <left>
+      <VBox prefHeight="400.0" prefWidth="181.0" BorderPane.alignment="CENTER">
+         <children>
+          <ScrollPane hbarPolicy="NEVER" prefHeight="344.0" prefWidth="181.0">
+               <content>
+              <Accordion fx:id="serverList" />
+               </content>
+          </ScrollPane>
+            <Button fx:id="newButton" mnemonicParsing="false" onAction="#addNewServer" prefHeight="25.0" prefWidth="202.0" text="New" />
+            <Button fx:id="editButton" mnemonicParsing="false" onAction="#editServer" prefHeight="25.0" prefWidth="220.0" text="Edit" />
+            <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#deleteServer" prefHeight="25.0" prefWidth="203.0" text="Delete" />
+         </children>
+      </VBox>
+   </left>
 </BorderPane>
