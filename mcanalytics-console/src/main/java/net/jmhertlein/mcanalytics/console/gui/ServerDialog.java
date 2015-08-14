@@ -3,14 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.jmhertlein.mcanalytics.console;
+package net.jmhertlein.mcanalytics.console.gui;
 
-import java.io.IOException;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.TextField;
+import net.jmhertlein.mcanalytics.console.gui.FXMLDialog;
 import net.jmhertlein.mcanalytics.console.gui.HostPane;
 
 /**
@@ -18,23 +15,13 @@ import net.jmhertlein.mcanalytics.console.gui.HostPane;
  *
  * @author joshua
  */
-public class ServerDialog extends Dialog {
+public class ServerDialog extends FXMLDialog {
 
     @FXML
     private TextField nicknameField, hostnameField, portField;
 
     public ServerDialog() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ServerDialog.fxml"));
-        DialogPane pane = new DialogPane();
-        fxmlLoader.setRoot(pane);
-        fxmlLoader.setController(this);
-
-        try {
-            fxmlLoader.load();
-        } catch(IOException exception) {
-            throw new RuntimeException(exception);
-        }
-        setDialogPane(pane);
+        super("/fxml/ServerDialog.fxml");
     }
 
     @FXML

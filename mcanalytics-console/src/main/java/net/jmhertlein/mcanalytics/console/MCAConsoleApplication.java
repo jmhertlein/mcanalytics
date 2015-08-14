@@ -1,28 +1,32 @@
 package net.jmhertlein.mcanalytics.console;
 
+import net.jmhertlein.mcanalytics.console.gui.LoginPane;
 import java.security.Security;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import net.jmhertlein.mcanalytics.api.APISocket;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-public class MainApp extends Application {
+public class MCAConsoleApplication extends Application {
+    private APISocket sock;
 
     @Override
     public void start(Stage stage) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
 
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/LoginScene.fxml"));
-
-        Scene scene = new Scene(root);
-        //scene.getStylesheets().add("/styles/Styles.css");
-
         stage.setTitle("MCAnalytics Login");
-        stage.setScene(scene);
+        stage.setScene(new Scene(new LoginPane(this)));
         stage.show();
+    }
+
+    public APISocket getSock() {
+        return sock;
+    }
+
+    public void setAPISocket(APISocket sock) {
+        this.sock = sock;
     }
 
     /**
@@ -34,6 +38,14 @@ public class MainApp extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if(sock != null) {
+            sock.shutdown();
+            System.out.println("Closed API socket.");
+        }
     }
 
 }

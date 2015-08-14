@@ -14,29 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.console;
+package net.jmhertlein.mcanalytics.console.gui;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.layout.BorderPane;
@@ -44,15 +38,16 @@ import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
 import net.jmhertlein.mcanalytics.api.request.NewPlayerLoginsRequest;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
+import net.jmhertlein.mcanalytics.console.ChartType;
+import net.jmhertlein.mcanalytics.console.DateAxis;
 
 /**
  * FXML Controller class
  *
  * @author joshua
  */
-public class ChartSceneController implements Initializable {
-    private Socket raw;
-    private APISocket sock;
+public class ChartPane extends FXMLPane {
+    private final APISocket sock;
 
     @FXML
     private ChoiceBox<ChartType> chartChooser;
@@ -62,18 +57,11 @@ public class ChartSceneController implements Initializable {
     private DatePicker startDatePicker;
     @FXML
     private DatePicker endDatePicker;
-    @FXML
-    private Button searchButton;
 
-    public void setIO(APISocket s) {
+    public ChartPane(APISocket s) {
+        super("/fxml/ChartScene.fxml");
+
         sock = s;
-    }
-
-    /**
-     * Initializes the controller class.
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
         chartChooser.setItems(FXCollections.observableArrayList(ChartType.values()));
     }
 

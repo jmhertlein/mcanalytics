@@ -17,22 +17,19 @@
 package net.jmhertlein.mcanalytics.console.gui;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.time.ZoneId;
-import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 /**
- * FXML Controller class
+ * A pane to display an X509 Certificate
  *
  * @author joshua
  */
-public class X509PaneController implements Initializable {
+public class X509Pane extends FXMLPane {
     private X509Certificate cert;
 
     @FXML
@@ -50,15 +47,13 @@ public class X509PaneController implements Initializable {
     @FXML
     private TextField maxlenBasicConstraint;
 
-    /**
-     * Initializes the controller class.
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-
+    public X509Pane(X509Certificate cert) {
+        super("/fxml/X509Pane.fxml");
+        this.cert = cert;
+        setCertificate(cert);
     }
 
-    public void setCertificate(X509Certificate c) {
+    private void setCertificate(X509Certificate c) {
         this.cert = c;
         subjectDN.setText(cert.getSubjectX500Principal().toString());
         issuerDN.setText(cert.getIssuerX500Principal().toString());

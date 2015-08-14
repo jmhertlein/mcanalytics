@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.console;
+package net.jmhertlein.mcanalytics.console.gui;
 
+import net.jmhertlein.mcanalytics.console.gui.ServerDialog;
+import net.jmhertlein.mcanalytics.console.gui.ChartPane;
 import net.jmhertlein.mcanalytics.console.gui.HostPane;
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -33,15 +34,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
@@ -58,14 +55,16 @@ import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
 import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
-import net.jmhertlein.mcanalytics.console.gui.CertTrustPromptController;
+import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
+import net.jmhertlein.mcanalytics.console.gui.CertTrustPromptDialog;
+import net.jmhertlein.mcanalytics.console.gui.FXMLPane;
 
 /**
  * FXML Controller class
  *
  * @author joshua
  */
-public class LoginSceneController implements Initializable {
+public class LoginPane extends FXMLPane {
     private static final Path DATA_PATH = Paths.get(System.getProperty("user.home"), ".local", "share", "mcanalytics-console"),
             TM_PATH = DATA_PATH.resolve("trust.jks");
     @FXML
@@ -78,17 +77,16 @@ public class LoginSceneController implements Initializable {
     private Button loginButton;
     @FXML
     private CheckBox rememberLoginBox;
-    @FXML
-    private Button addButton, editButton, deleteButton;
 
     private KeyStore trust;
+    private MCAConsoleApplication app;
 
-    /**
-     * Initializes the controller class.
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    public LoginPane(MCAConsoleApplication app) {
+        super("/fxml/LoginScene.fxml");
+
         trust = SSLUtil.newKeyStore();
+        this.app = app;
+
         File f = TM_PATH.toFile();
         if(f.exists()) {
             try(FileInputStream fis = new FileInputStream(f)) {
@@ -130,13 +128,9 @@ public class LoginSceneController implements Initializable {
                 if(ssle.getCause() instanceof UntrustedCertificateException) {
                     System.out.println("Got the correct exception");
                     UntrustedCertificateException uce = (UntrustedCertificateException) ssle.getCause();
-                    FXMLLoader l = new FXMLLoader();
-                    Parent load = (Parent) l.load(getClass().getResourceAsStream("/fxml/CertTrustPrompt.fxml"));
-                    ((CertTrustPromptController) l.getController()).setCertificate((X509Certificate) uce.getChain()[0]);
-                    ((CertTrustPromptController) l.getController()).setKeyStore(trust);
-                    Stage s = new Stage();
-                    s.setScene(new Scene(load));
-                    s.showAndWait();
+                    CertTrustPromptDialog dlg = new CertTrustPromptDialog(trust, (X509Certificate) uce.getChain()[0]);
+                    dlg.showAndWait();
+                    System.out.println("DIALOG RETURNED");
                 }
                 return;
             }
@@ -144,6 +138,7 @@ public class LoginSceneController implements Initializable {
             PrintWriter out = new PrintWriter(raw.getOutputStream());
             BufferedReader in = new BufferedReader(new InputStreamReader(raw.getInputStream()));
             APISocket sock = new APISocket(out, in);
+            app.setAPISocket(sock);
             sock.startListener();
 
             //handle authentication
@@ -156,19 +151,16 @@ public class LoginSceneController implements Initializable {
                 else
                     System.out.println("Login failed.");
             } catch(InterruptedException | ExecutionException ex) {
-                Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("Login error.");
             }
             //auth done
 
-            FXMLLoader l = new FXMLLoader(getClass().getResource("/fxml/ChartScene.fxml"));
-            Parent root = l.load();
-            ((ChartSceneController) l.getController()).setIO(sock);
             Stage window = (Stage) loginButton.getScene().getWindow();
-            window.setScene(new Scene(root));
+            window.setScene(new Scene(new ChartPane(sock)));
             window.show();
         } catch(IOException ex) {
-            Logger.getLogger(LoginSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -176,22 +168,22 @@ public class LoginSceneController implements Initializable {
     public void addNewServer(ActionEvent event) {
         ServerDialog d = new ServerDialog();
         HostPane p = (HostPane) d.showAndWait().get();
-        
+
         if(p != null) {
             serverList.getPanes().add(p);
             System.out.println("Added server: " + p.toString());
-        } else { 
+        } else {
             System.out.println("Didn't add server?");
         }
     }
-    
+
     @FXML
     public void editServer(ActionEvent event) {
-        
+
     }
-    
+
     @FXML
     public void deleteServer(ActionEvent event) {
-        
+
     }
 }
