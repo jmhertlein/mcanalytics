@@ -18,12 +18,17 @@ package net.jmhertlein.mcanalytics.console.gui;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -67,6 +72,10 @@ public class ChartPane extends FXMLPane {
 
         sock = s;
         chartChooser.setItems(FXCollections.observableArrayList(ChartType.values()));
+        chartChooser.setValue(ChartType.ONLINE_PLAYERS);
+
+        startDatePicker.setValue(LocalDate.now());
+        endDatePicker.setValue(LocalDate.now());
     }
 
     @FXML
@@ -103,6 +112,8 @@ public class ChartPane extends FXMLPane {
 
         LinkedHashMap<LocalDateTime, Integer> counts = requestResult.get();
 
+        mungeDataToSquareLines(counts);
+
         XYChart.Series<Date, Number> series = new XYChart.Series<>();
         for(Map.Entry<LocalDateTime, Integer> e : counts.entrySet()) {
             series.getData().add(new XYChart.Data(Date.from(e.getKey().atZone(ZoneId.systemDefault()).toInstant()), e.getValue()));
@@ -115,13 +126,28 @@ public class ChartPane extends FXMLPane {
         yAxis.setMinorTickLength(1);
         xAxis.setAutoRanging(true);
         final LineChart<Date, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setFocusTraversable(true);
         lineChart.setTitle("Online Players");
         lineChart.getData().add(series);
         chartPane.setCenter(lineChart);
         chartPane.layout();
 
         lineChart.setOnScroll(e -> handleScroll(xAxis, e));
+    }
+
+    private static <V> void mungeDataToSquareLines(LinkedHashMap<LocalDateTime, V> counts) {
+        if(counts.size() > 1) {
+            Map<LocalDateTime, V> padding = new HashMap<>();
+            Iterator<Entry<LocalDateTime, V>> iterator = counts.entrySet().stream().sorted((l, r) -> l.getKey().compareTo(r.getKey())).collect(Collectors.toList()).iterator();
+            Entry<LocalDateTime, V> prev = iterator.next();
+            while(iterator.hasNext()) {
+                Entry<LocalDateTime, V> cur = iterator.next();
+                padding.put(cur.getKey().minusNanos(1), prev.getValue());
+                System.out.println("Adding a transition from " + prev.getValue() + " to " + cur.getValue());
+                prev = cur;
+            }
+
+            counts.putAll(padding);
+        }
     }
 
     private void handleFirstLoginsChart() throws IOException, InterruptedException, ExecutionException {
@@ -158,8 +184,6 @@ public class ChartPane extends FXMLPane {
 
         Duration d = Duration.between(lower, upper);
         d = d.dividedBy(10).multipliedBy(direction);
-
-        System.out.println("adjustment: " + d.toString());
 
         axis.setLowerBound(TimeUtils.newToOld(lower.minus(d)));
         axis.setUpperBound(TimeUtils.newToOld(upper.minus(d)));

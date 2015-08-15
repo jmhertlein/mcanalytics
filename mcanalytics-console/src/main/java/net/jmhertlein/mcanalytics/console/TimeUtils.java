@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.console;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -31,5 +32,9 @@ public class TimeUtils {
 
     public static LocalDateTime oldToNew(Date d) {
         return LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault());
+    }
+
+    public static Date newToOld(LocalDate d) {
+        return newToOld(d.atStartOfDay());
     }
 }
