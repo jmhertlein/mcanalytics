@@ -17,6 +17,7 @@
 package net.jmhertlein.mcanalytics.console.gui;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -33,6 +34,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
@@ -40,6 +43,7 @@ import net.jmhertlein.mcanalytics.api.request.NewPlayerLoginsRequest;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
 import net.jmhertlein.mcanalytics.console.ChartType;
 import net.jmhertlein.mcanalytics.console.DateAxis;
+import net.jmhertlein.mcanalytics.console.TimeUtils;
 
 /**
  * FXML Controller class
@@ -111,10 +115,13 @@ public class ChartPane extends FXMLPane {
         yAxis.setMinorTickLength(1);
         xAxis.setAutoRanging(true);
         final LineChart<Date, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setFocusTraversable(true);
         lineChart.setTitle("Online Players");
         lineChart.getData().add(series);
         chartPane.setCenter(lineChart);
         chartPane.layout();
+
+        lineChart.setOnScroll(e -> handleScroll(xAxis, e));
     }
 
     private void handleFirstLoginsChart() throws IOException, InterruptedException, ExecutionException {
@@ -144,4 +151,54 @@ public class ChartPane extends FXMLPane {
         chartPane.layout();
     }
 
+    private void scroll(DateAxis axis, int direction) {
+        axis.setAutoRanging(false);
+        LocalDateTime lower = TimeUtils.oldToNew(axis.getLowerBound());
+        LocalDateTime upper = TimeUtils.oldToNew(axis.getUpperBound());
+
+        Duration d = Duration.between(lower, upper);
+        d = d.dividedBy(10).multipliedBy(direction);
+
+        System.out.println("adjustment: " + d.toString());
+
+        axis.setLowerBound(TimeUtils.newToOld(lower.minus(d)));
+        axis.setUpperBound(TimeUtils.newToOld(upper.minus(d)));
+    }
+
+    private void zoom(DateAxis axis, int direction) {
+        axis.setAutoRanging(false);
+        LocalDateTime lower = TimeUtils.oldToNew(axis.getLowerBound());
+        LocalDateTime upper = TimeUtils.oldToNew(axis.getUpperBound());
+
+        Duration d = Duration.between(lower, upper);
+        d = d.dividedBy(10).multipliedBy(direction);
+
+        axis.setLowerBound(TimeUtils.newToOld(lower.minus(d)));
+        axis.setUpperBound(TimeUtils.newToOld(upper.plus(d)));
+    }
+
+    private void handleKey(DateAxis xAxis, KeyCode code) {
+        switch(code) {
+            case LEFT:
+                scroll(xAxis, -1);
+                break;
+            case RIGHT:
+                scroll(xAxis, 1);
+                break;
+            case DOWN:
+                zoom(xAxis, -1);
+                break;
+            case UP:
+                scroll(xAxis, 1);
+                break;
+        }
+        System.out.println("Done keying: " + code.name());
+    }
+
+    private void handleScroll(DateAxis xAxis, ScrollEvent e) {
+        if(e.isShiftDown())
+            zoom(xAxis, e.getDeltaY() > 0 ? -1 : 1);
+        else
+            scroll(xAxis, e.getDeltaY() > 0 ? 1 : -1);
+    }
 }

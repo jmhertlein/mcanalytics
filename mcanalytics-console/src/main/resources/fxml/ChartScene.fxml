@@ -9,36 +9,32 @@
 <?import javafx.scene.layout.*?>
 
 
-<fx:root type="Pane" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <javafx.scene.layout.BorderPane fx:id="chartPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="400.0">
-        <top>
-          <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
-            <children>
-              <ChoiceBox fx:id="chartChooser" prefWidth="150.0">
-                <HBox.margin>
-                  <Insets right="5.0" />
-                </HBox.margin>
-              </ChoiceBox>
-              <DatePicker fx:id="startDatePicker" maxWidth="100.0" promptText="Start" />
-              <DatePicker fx:id="endDatePicker" prefHeight="25.0" prefWidth="100.0" promptText="End">
-                <HBox.margin>
-                  <Insets left="5.0" />
-                </HBox.margin>
-              </DatePicker>
-              <Button fx:id="searchButton" mnemonicParsing="false" onAction="#onSearch" text="Search">
-                <HBox.margin>
-                  <Insets left="5.0" />
-                </HBox.margin>
-              </Button>
-              <ProgressBar prefWidth="100.0" progress="0.0">
-                <HBox.margin>
-                  <Insets left="5.0" />
-                </HBox.margin>
-              </ProgressBar>
-            </children>
-          </HBox>
-        </top>
-      </javafx.scene.layout.BorderPane>
-   </children>
+<fx:root fx:id="chartPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="400.0" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
+  <top>
+    <HBox alignment="CENTER_LEFT" BorderPane.alignment="CENTER">
+      <children>
+        <ChoiceBox fx:id="chartChooser" prefWidth="150.0">
+          <HBox.margin>
+            <Insets right="5.0" />
+          </HBox.margin>
+        </ChoiceBox>
+        <DatePicker fx:id="startDatePicker" maxWidth="100.0" promptText="Start" />
+        <DatePicker fx:id="endDatePicker" prefHeight="25.0" prefWidth="100.0" promptText="End">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </DatePicker>
+        <Button fx:id="searchButton" mnemonicParsing="false" onAction="#onSearch" text="Search">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </Button>
+        <ProgressBar prefWidth="100.0" progress="0.0">
+          <HBox.margin>
+            <Insets left="5.0" />
+          </HBox.margin>
+        </ProgressBar>
+      </children>
+    </HBox>
+  </top>
 </fx:root>

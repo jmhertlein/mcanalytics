@@ -5,48 +5,44 @@
 <?import javafx.scene.layout.*?>
 
 
-<fx:root type="Pane" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <javafx.scene.layout.BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-        <bottom>
-          <TitledPane expanded="false" text="Public Key">
-            <content>
-              <TextArea fx:id="pubKeyArea" editable="false" prefHeight="105.0" prefWidth="600.0" wrapText="true" BorderPane.alignment="CENTER" />
-            </content>
-          </TitledPane>
-        </bottom>
-        <center>
-          <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-            <children>
-              <Label layoutX="14.0" layoutY="14.0" text="Validity:" />
-              <Label layoutX="27.0" layoutY="44.0" text="Start:" />
-              <Label layoutX="30.0" layoutY="74.0" text="End:" />
-              <DatePicker fx:id="notBeforeField" editable="false" layoutX="58.0" layoutY="39.0" prefHeight="25.0" prefWidth="268.0" AnchorPane.rightAnchor="10.0" />
-              <DatePicker fx:id="notAfterField" editable="false" layoutX="71.0" layoutY="69.0" prefHeight="25.0" prefWidth="268.0" AnchorPane.rightAnchor="11.0" />
-              <Label layoutX="12.0" layoutY="113.0" text="Basic Constraints:" />
-              <TextField fx:id="caBasicConstraint" editable="false" layoutX="71.0" layoutY="135.0" />
-              <Label layoutX="35.0" layoutY="140.0" text="ca:" />
-              <TextField fx:id="maxlenBasicConstraint" editable="false" layoutX="71.0" layoutY="167.0" />
-              <Label layoutX="9.0" layoutY="172.0" text="maxlen:" />
-            </children>
-          </AnchorPane>
-        </center>
-        <left>
-          <Accordion prefHeight="258.0" prefWidth="222.0" BorderPane.alignment="CENTER">
-            <panes>
-              <TitledPane text="Subject DN">
-                <content>
-                  <TextArea fx:id="subjectDN" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
-                </content>
-              </TitledPane>
-              <TitledPane text="Issuer DN">
-                <content>
-                  <TextArea fx:id="issuerDN" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
-                </content>
-              </TitledPane>
-            </panes>
-          </Accordion>
-        </left>
-      </javafx.scene.layout.BorderPane>
-   </children>
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
+  <bottom>
+    <TitledPane expanded="false" text="Public Key">
+      <content>
+        <TextArea fx:id="pubKeyArea" editable="false" prefHeight="105.0" prefWidth="600.0" wrapText="true" BorderPane.alignment="CENTER" />
+      </content>
+    </TitledPane>
+  </bottom>
+  <center>
+    <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <children>
+        <Label layoutX="14.0" layoutY="14.0" text="Validity:" />
+        <Label layoutX="27.0" layoutY="44.0" text="Start:" />
+        <Label layoutX="30.0" layoutY="74.0" text="End:" />
+        <DatePicker fx:id="notBeforeField" editable="false" layoutX="58.0" layoutY="39.0" prefHeight="25.0" prefWidth="268.0" AnchorPane.rightAnchor="10.0" />
+        <DatePicker fx:id="notAfterField" editable="false" layoutX="71.0" layoutY="69.0" prefHeight="25.0" prefWidth="268.0" AnchorPane.rightAnchor="11.0" />
+        <Label layoutX="12.0" layoutY="113.0" text="Basic Constraints:" />
+        <TextField fx:id="caBasicConstraint" editable="false" layoutX="71.0" layoutY="135.0" />
+        <Label layoutX="35.0" layoutY="140.0" text="ca:" />
+        <TextField fx:id="maxlenBasicConstraint" editable="false" layoutX="71.0" layoutY="167.0" />
+        <Label layoutX="9.0" layoutY="172.0" text="maxlen:" />
+      </children>
+    </AnchorPane>
+  </center>
+  <left>
+    <Accordion prefHeight="258.0" prefWidth="222.0" BorderPane.alignment="CENTER">
+      <panes>
+        <TitledPane text="Subject DN">
+          <content>
+            <TextArea fx:id="subjectDN" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
+          </content>
+        </TitledPane>
+        <TitledPane text="Issuer DN">
+          <content>
+            <TextArea fx:id="issuerDN" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
+          </content>
+        </TitledPane>
+      </panes>
+    </Accordion>
+  </left>
 </fx:root>

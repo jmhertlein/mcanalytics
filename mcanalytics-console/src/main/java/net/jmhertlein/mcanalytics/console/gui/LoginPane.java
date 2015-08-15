@@ -16,9 +16,6 @@
  */
 package net.jmhertlein.mcanalytics.console.gui;
 
-import net.jmhertlein.mcanalytics.console.gui.ServerDialog;
-import net.jmhertlein.mcanalytics.console.gui.ChartPane;
-import net.jmhertlein.mcanalytics.console.gui.HostPane;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,8 +53,6 @@ import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
 import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
 import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
-import net.jmhertlein.mcanalytics.console.gui.CertTrustPromptDialog;
-import net.jmhertlein.mcanalytics.console.gui.FXMLPane;
 
 /**
  * FXML Controller class

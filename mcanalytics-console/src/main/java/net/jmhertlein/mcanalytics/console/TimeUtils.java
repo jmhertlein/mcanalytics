@@ -14,26 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.console.gui;
+package net.jmhertlein.mcanalytics.console;
 
-import java.io.IOException;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.layout.BorderPane;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  *
  * @author joshua
  */
-public class FXMLPane extends BorderPane {
-    public FXMLPane(String fxmlFile) {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fxmlFile));
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setController(this);
+public class TimeUtils {
+    public static Date newToOld(LocalDateTime ldt) {
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    }
 
-        try {
-            fxmlLoader.load();
-        } catch(IOException exception) {
-            throw new RuntimeException(exception);
-        }
+    public static LocalDateTime oldToNew(Date d) {
+        return LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault());
     }
 }
