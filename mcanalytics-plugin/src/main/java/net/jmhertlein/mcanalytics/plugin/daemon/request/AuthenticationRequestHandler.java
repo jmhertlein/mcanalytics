@@ -16,15 +16,21 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
@@ -34,6 +40,7 @@ import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import net.jmhertlein.mcanalytics.plugin.daemon.AuthenticationException;
 import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,9 +49,14 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class AuthenticationRequestHandler extends RequestHandler {
+    private final PrivateKey serverKey;
+    private final X509Certificate serverCert;
 
-    public AuthenticationRequestHandler(DataSource ds, StatementProvider stmts, RequestDispatcher d, JSONObject req) {
+    public AuthenticationRequestHandler(PrivateKey serverKey, X509Certificate serverCert, DataSource ds, StatementProvider stmts, RequestDispatcher d, JSONObject req) {
         super(ds, stmts, d, req);
+
+        this.serverKey = serverKey;
+        this.serverCert = serverCert;
     }
 
     @Override
@@ -60,12 +72,17 @@ public class AuthenticationRequestHandler extends RequestHandler {
         AuthenticationMethod m = AuthenticationMethod.valueOf(request.getString("method"));
         String username = request.getString("username");
 
+        System.out.println("Auth method is " + m.name());
+
         if(m == AuthenticationMethod.PASSWORD) {
             success = authenticateWithPassword(request, conn, stmts, username);
+            if(success && request.has("remember") && request.getBoolean("remember")) {
+                success &= signClientKey(request, resp);
+            }
         } else if(m == AuthenticationMethod.TRUST) {
-            success = Stream.of(c.getSocket().getSession().getPeerCertificates())
-                    .map(crt -> SSLUtil.getCNs((X509Certificate) crt))
-                    .anyMatch(names -> names.contains(username));
+            success = SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).contains(username);
+            System.out.println("Username is " + username + " and CNs in received certs are:");
+            SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).stream().forEach(s -> System.out.println(s));
         } else {
             throw new Exception("Invalid authentication method.");
         }
@@ -98,5 +115,30 @@ public class AuthenticationRequestHandler extends RequestHandler {
         byte[] computedHash = SSLUtil.hash(password, salt);
 
         return Arrays.equals(storedHash, computedHash);
+    }
+
+    private boolean signClientKey(JSONObject request, JSONObject response) {
+        String username = request.getString("username");
+        PKCS10CertificationRequest csr;
+        try {
+            csr = new PKCS10CertificationRequest(Base64.decodeBase64(request.getString("csr")));
+        } catch(IOException ex) {
+            return false;
+        }
+
+        Set<String> names = SSLUtil.getCNs(csr.getSubject());
+        if(names.size() == 1 && names.contains(username)) {
+            X509Certificate clientCert = SSLUtil.fulfillCertRequest(serverKey, serverCert, csr, false);
+            try {
+                response.put("cert", Base64.encodeBase64String(clientCert.getEncoded()));
+                response.put("ca", Base64.encodeBase64String(serverCert.getEncoded()));
+                return true;
+            } catch(CertificateEncodingException ex) {
+                Logger.getLogger(AuthenticationRequestHandler.class.getName()).log(Level.SEVERE, null, ex);
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }

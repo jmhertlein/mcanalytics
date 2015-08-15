@@ -16,6 +16,7 @@
  */
 package net.jmhertlein.mcanalytics.api.auth;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
@@ -34,6 +35,7 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
@@ -46,13 +48,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
-import org.bouncycastle.asn1.x500.RDN;
+import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -103,13 +107,13 @@ public class SSLUtil {
     public static X509Certificate newSelfSignedCertificate(KeyPair pair, X500Name subject, boolean isAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
                 subject,
-                BigInteger.ZERO,
-                Date.from(Instant.now()),
+                BigInteger.probablePrime(128, new SecureRandom()),
+                Date.from(Instant.now().minusSeconds(1)),
                 Date.from(LocalDateTime.now().plusYears(3).toInstant(ZoneOffset.UTC)),
                 subject,
                 pair.getPublic());
         try {
-            b.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+            b.addExtension(Extension.basicConstraints, true, new BasicConstraints(isAuthority));
         } catch(CertIOException ex) {
             Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -134,9 +138,9 @@ public class SSLUtil {
      */
     public static X509Certificate fulfillCertRequest(PrivateKey caKey, X509Certificate caCert, PKCS10CertificationRequest r, boolean makeAuthority) {
         X509v3CertificateBuilder b = new JcaX509v3CertificateBuilder(
-                new X500Name(caCert.getSubjectX500Principal().getName()),
-                BigInteger.ZERO,
-                Date.from(Instant.now()),
+                new X500Name(caCert.getSubjectDN().getName()), // the order of O,OU,CN returned is very important
+                BigInteger.probablePrime(128, new SecureRandom()),
+                Date.from(Instant.now().minusSeconds(1)),
                 Date.from(LocalDateTime.now().plusYears(3).toInstant(ZoneOffset.UTC)),
                 r.getSubject(),
                 getPublicKeyFromInfo(r.getSubjectPublicKeyInfo()));
@@ -259,7 +263,7 @@ public class SSLUtil {
 
     }
 
-    private static PublicKey getPublicKeyFromInfo(SubjectPublicKeyInfo o) {
+    public static PublicKey getPublicKeyFromInfo(SubjectPublicKeyInfo o) {
         try {
             byte[] bytes = o.getEncoded("X509");
             return KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(bytes));
@@ -276,6 +280,13 @@ public class SSLUtil {
         return b.build();
     }
 
+    public static Set<String> getNames(ASN1ObjectIdentifier type, X500Name name) {
+        return Stream.of(name.getRDNs(type))
+                .flatMap(n -> Stream.of(n.getTypesAndValues()))
+                .map(n -> IETFUtils.valueToString(n.getValue()))
+                .collect(Collectors.toSet());
+    }
+
     public static X500Name newX500Name(String commonName, String orgName, String ouName) {
         X500NameBuilder b = new X500NameBuilder(BCStyle.INSTANCE);
         b.addRDN(BCStyle.O, orgName);
@@ -284,21 +295,16 @@ public class SSLUtil {
         return b.build();
     }
 
-    /**
-     * Gets the common names of the subject of an X509Certificate
-     *
-     * based on:
-     * https://stackoverflow.com/questions/2914521/how-to-extract-cn-from-x509certificate-in-java
-     *
-     * Also note CN is indeed a multi-valued attribute:
-     * https://tools.ietf.org/html/rfc4519#section-2.3
-     *
-     * I'm pretty sure the outer loop will return only one RDN, but the inner loop can return many.
-     *
-     * @param cert
-     * @return a list of all CNs, or an empty list if the certificate's encoding is invalid
-     */
-    public static Set<String> getCNs(X509Certificate cert) {
+    public static X509Certificate certFromBase64(String base64) {
+        try {
+            return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(Base64.decodeBase64(base64)));
+        } catch(CertificateException ex) {
+            Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    public static Set<String> getNames(ASN1ObjectIdentifier type, X509Certificate cert) {
         Set<String> names = new HashSet<>();
         X500Name x500name;
         try {
@@ -307,13 +313,19 @@ public class SSLUtil {
             return names;
         }
 
-        for(RDN rdn : x500name.getRDNs(BCStyle.CN)) {
-            for(AttributeTypeAndValue atv : rdn.getTypesAndValues()) {
-                names.add(IETFUtils.valueToString(atv.getValue()));
-            }
-        }
+        return getNames(type, x500name);
+    }
 
-        return names;
+    public static Set<String> getCNs(X509Certificate cert) {
+        return getNames(BCStyle.CN, cert);
+    }
+
+    public static Set<String> getCNs(X500Name name) {
+        return getNames(BCStyle.CN, name);
+    }
+
+    public static Set<String> getOrgNames(X509Certificate cert) {
+        return getNames(BCStyle.O, cert);
     }
 
     /**

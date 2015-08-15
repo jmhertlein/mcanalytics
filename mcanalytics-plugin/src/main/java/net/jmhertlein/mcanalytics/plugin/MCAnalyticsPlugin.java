@@ -48,6 +48,7 @@ import org.postgresql.ds.PGPoolingDataSource;
  * @author joshua
  */
 public class MCAnalyticsPlugin extends JavaPlugin {
+    public static final String SERVER_PRIVATE_KEY = "serverPrivateKey", SERVER_CERTIFICATE = "serverIdentity";
     private DataSource connections;
     private ConsoleDaemon d;
     private StatementProvider stmts;
@@ -151,7 +152,9 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         if(source.exists()) {
             try(FileInputStream fis = new FileInputStream(source)) {
                 trustMaterial.load(fis, new char[0]);
-            } catch(IOException | NoSuchAlgorithmException | CertificateException ex) {
+                getLogger().info("Loaded JKS.");
+                getLogger().info("Size: " + trustMaterial.size());
+            } catch(IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException ex) {
                 Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
@@ -169,11 +172,11 @@ public class MCAnalyticsPlugin extends JavaPlugin {
     private void populateWithTrustMaterial(KeyStore store) {
         getLogger().info("Generating new ECDSA keypair (this may take a moment)");
         KeyPair keys = SSLUtil.newECDSAKeyPair();
-        Certificate cert = SSLUtil.newSelfSignedCertificate(keys, SSLUtil.newX500Name("MCAnalytics Server", getServer().getName(), "plugins"), false);
+        Certificate cert = SSLUtil.newSelfSignedCertificate(keys, SSLUtil.newX500Name("MCAnalytics Server", getServer().getName(), "plugins"), true);
 
         try {
-            store.setCertificateEntry("serverIdentity", cert);
-            store.setKeyEntry("serverPrivateKey", keys.getPrivate(), new char[0], new Certificate[]{cert});
+            store.setCertificateEntry(SERVER_CERTIFICATE, cert);
+            store.setKeyEntry(SERVER_PRIVATE_KEY, keys.getPrivate(), new char[0], new Certificate[]{cert});
             getLogger().info("Successfully created new server identity.");
         } catch(KeyStoreException ex) {
             getLogger().log(Level.SEVERE, "Error creating server's identity: {0}", ex.getLocalizedMessage());

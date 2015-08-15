@@ -20,6 +20,11 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +40,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
+import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 
 /**
@@ -50,12 +56,23 @@ public class ConsoleDaemon {
     private final KeyStore trustMaterial;
     private final Map<ClientMonitor, Boolean> clients;
 
+    private final PrivateKey serverKey;
+    private final X509Certificate serverCert;
+
     public ConsoleDaemon(KeyStore trustMaterial, DataSource connections, StatementProvider stmts) {
         workers = Executors.newCachedThreadPool();
         this.connections = connections;
         this.stmts = stmts;
         this.trustMaterial = trustMaterial;
         this.clients = new WeakHashMap<>();
+
+        try {
+            this.serverKey = (PrivateKey) trustMaterial.getKey(MCAnalyticsPlugin.SERVER_PRIVATE_KEY, new char[0]);
+            this.serverCert = (X509Certificate) trustMaterial.getCertificate(MCAnalyticsPlugin.SERVER_CERTIFICATE);
+        } catch(KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException ex) {
+            Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     public void startListening() {
@@ -89,7 +106,12 @@ public class ConsoleDaemon {
                 continue;
             }
 
-            ClientMonitor m = new ClientMonitor(connections, stmts, workers, client);
+            ClientMonitor m = new ClientMonitor(serverKey,
+                                                serverCert,
+                                                connections,
+                                                stmts,
+                                                workers,
+                                                client);
             workers.submit(m);
             clients.put(m, true);
         }

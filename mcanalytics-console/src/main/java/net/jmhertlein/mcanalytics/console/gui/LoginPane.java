@@ -17,42 +17,45 @@
 package net.jmhertlein.mcanalytics.console.gui;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocket;
 import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
-import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
+import net.jmhertlein.mcanalytics.api.auth.AuthenticationResult;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
 import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
 import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
 /**
  * FXML Controller class
@@ -60,8 +63,6 @@ import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
  * @author joshua
  */
 public class LoginPane extends FXMLPane {
-    private static final Path DATA_PATH = Paths.get(System.getProperty("user.home"), ".local", "share", "mcanalytics-console"),
-            TM_PATH = DATA_PATH.resolve("trust.jks");
     @FXML
     private Accordion serverList;
     @FXML
@@ -73,35 +74,29 @@ public class LoginPane extends FXMLPane {
     @FXML
     private CheckBox rememberLoginBox;
 
-    private KeyStore trust;
-    private MCAConsoleApplication app;
+    private final KeyStore trust;
+    private final MCAConsoleApplication app;
 
-    public LoginPane(MCAConsoleApplication app) {
+    public LoginPane(MCAConsoleApplication app, KeyStore trust) {
         super("/fxml/LoginScene.fxml");
 
-        trust = SSLUtil.newKeyStore();
+        this.trust = trust;
         this.app = app;
 
-        File f = TM_PATH.toFile();
-        if(f.exists()) {
-            try(FileInputStream fis = new FileInputStream(f)) {
-                trust.load(fis, new char[0]);
-            } catch(IOException | NoSuchAlgorithmException | CertificateException ex) {
-                System.err.println("Error loading trust source: " + ex.getLocalizedMessage());
-            }
-        } else {
-            System.out.println("No trust.jks, generating new...");
-            KeyPair pair = SSLUtil.newECDSAKeyPair();
-            X509Certificate cert = SSLUtil.newSelfSignedCertificate(pair, SSLUtil.newX500Name(System.getProperty("user.name"), "<Servername>", "MCAnalytics Users"), false);
+        serverList.getPanes().add(new HostPane("Josh's Test Server", "localhost", 35555));
+
+        for(TitledPane p : serverList.getPanes()) {
+            HostPane hp = (HostPane) p;
+
             try {
-                trust.setCertificateEntry("client-public-selfsigned", cert);
-                trust.setKeyEntry("client-private", pair.getPrivate(), new char[0], new Certificate[]{cert});
+                if(trust.isCertificateEntry(hp.getUrl())) {
+                    //hp.setBackground(new Background(new BackgroundFill(Paint.valueOf("GREEN"), CornerRadii.EMPTY, Insets.EMPTY)));
+                    //System.out.println("set background for" + hp.getDisplayName());
+                }
             } catch(KeyStoreException ex) {
-                System.err.println("Error initializing keystore: " + ex.getLocalizedMessage());
+                Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
-        serverList.getPanes().add(new HostPane("Josh's Test Server", "localhost", 35555));
 
         if(!serverList.getPanes().isEmpty())
             serverList.setExpandedPane(serverList.getPanes().get(0));
@@ -116,6 +111,7 @@ public class LoginPane extends FXMLPane {
         try {
             SSLContext ctx = SSLUtil.buildClientContext(trust);
             SSLSocket raw = (SSLSocket) ctx.getSocketFactory().createSocket(selected.getUrl(), selected.getPort());
+            raw.setWantClientAuth(true);
             try {
                 System.out.println("Starting handshake...");
                 raw.startHandshake();
@@ -137,17 +133,51 @@ public class LoginPane extends FXMLPane {
             sock.startListener();
 
             //handle authentication
-            FutureRequest<Boolean> login = sock.submit(new AuthenticationRequest(AuthenticationMethod.PASSWORD, usernameField.getText(), passwordField.getText()));
-            System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText());
+            boolean hasCert = false;
+            FutureRequest<AuthenticationResult> login;
+            if(trust.isCertificateEntry(selected.getUrl())) {
+                try {
+                    ((X509Certificate) trust.getCertificate(selected.getUrl())).checkValidity();
+                    hasCert = true;
+                } catch(CertificateExpiredException | CertificateNotYetValidException ex) {
+                    Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            System.out.println("Has cert: " + hasCert);
+            KeyPair newPair = null;
+
+            if(hasCert) {
+                String cn = SSLUtil.getCNs((X509Certificate) trust.getCertificate(selected.getUrl())).iterator().next();
+                login = sock.submit(new AuthenticationRequest(cn));
+                System.out.println("Logging in w/ cert. CN: " + cn + ", URL: " + selected.getUrl());
+            } else if(rememberLoginBox.isSelected()) {
+                newPair = SSLUtil.newECDSAKeyPair();
+                PKCS10CertificationRequest csr = SSLUtil.newCertificateRequest(SSLUtil.newX500Name(usernameField.getText(), selected.getUrl(), "mcanalytics"), newPair);
+                login = sock.submit(new AuthenticationRequest(usernameField.getText(), passwordField.getText(), csr));
+                System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText() + " and requesting a cert.");
+            } else {
+                login = sock.submit(new AuthenticationRequest(usernameField.getText(), passwordField.getText()));
+                System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText());
+            }
+
             try {
-                boolean success = login.get();
-                if(success)
+                boolean success = login.get().getSuccess();
+                if(success) {
                     System.out.println("Login successful");
-                else
+                    if(login.get().hasCertificate()) {
+                        trust.setCertificateEntry(selected.getUrl(), login.get().getCert());
+                        trust.setKeyEntry(selected.getUrl() + "-private", newPair.getPrivate(), new char[0], new Certificate[]{login.get().getCert(), login.get().getCA()});
+                        System.out.println("Stored a trusted cert from server.");
+                    }
+                } else
                     System.out.println("Login failed.");
             } catch(InterruptedException | ExecutionException ex) {
                 Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("Login error.");
+            } catch(KeyStoreException ex) {
+                Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Login OK but error storing cert.");
             }
             //auth done
 
@@ -155,6 +185,8 @@ public class LoginPane extends FXMLPane {
             window.setScene(new Scene(new ChartPane(sock)));
             window.show();
         } catch(IOException ex) {
+            Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+        } catch(KeyStoreException ex) {
             Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

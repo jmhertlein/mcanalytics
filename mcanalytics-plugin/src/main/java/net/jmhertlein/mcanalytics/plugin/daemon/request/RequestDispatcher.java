@@ -16,6 +16,8 @@
  */
 package net.jmhertlein.mcanalytics.plugin.daemon.request;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import javax.sql.DataSource;
@@ -29,13 +31,17 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class RequestDispatcher {
+    private final PrivateKey serverKey;
+    private final X509Certificate serverCert;
     private final ExecutorService workers;
     private final ConcurrentLinkedQueue<JSONObject> writeQueue;
     private final DataSource connections;
     private final StatementProvider stmts;
     private final ClientMonitor client;
 
-    public RequestDispatcher(ClientMonitor owner, DataSource connections, StatementProvider stmts, ExecutorService workers) {
+    public RequestDispatcher(PrivateKey serverKey, X509Certificate serverCert, ClientMonitor owner, DataSource connections, StatementProvider stmts, ExecutorService workers) {
+        this.serverKey = serverKey;
+        this.serverCert = serverCert;
         this.client = owner;
         this.workers = workers;
         writeQueue = new ConcurrentLinkedQueue<>();
@@ -77,7 +83,7 @@ public class RequestDispatcher {
                 System.out.println("Job is a PastOnlinePlayerCountRequest");
                 break;
             case AUTHENTICATION:
-                ret = new AuthenticationRequestHandler(connections, stmts, this, job);
+                ret = new AuthenticationRequestHandler(serverKey, serverCert, connections, stmts, this, job);
                 break;
             case PASSWORD_RESET:
                 ret = new PasswordResetRequestHandler(connections, stmts, this, job);

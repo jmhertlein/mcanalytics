@@ -16,7 +16,13 @@
  */
 package net.jmhertlein.mcanalytics.api.request;
 
+import org.apache.commons.codec.binary.Base64;
+import java.io.IOException;
+import java.security.cert.X509Certificate;
 import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
+import net.jmhertlein.mcanalytics.api.auth.AuthenticationResult;
+import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.json.JSONObject;
 
 /**
@@ -27,19 +33,54 @@ import org.json.JSONObject;
  *
  * @author joshua
  */
-public class AuthenticationRequest extends Request<Boolean> {
+public class AuthenticationRequest extends Request<AuthenticationResult> {
     private final AuthenticationMethod m;
     private final String password, username;
+    private final boolean requestRemember;
+    private final PKCS10CertificationRequest csr;
 
-    public AuthenticationRequest(AuthenticationMethod m, String username, String password) {
-        this.m = m;
+    public AuthenticationRequest(String username, String password, PKCS10CertificationRequest csr) {
+        this.m = AuthenticationMethod.PASSWORD;
         this.password = password;
         this.username = username;
+        this.requestRemember = true;
+        this.csr = csr;
+    }
+
+    public AuthenticationRequest(String username, String password) {
+        this.m = AuthenticationMethod.PASSWORD;
+        this.password = password;
+        this.username = username;
+        this.requestRemember = false;
+        this.csr = null;
+    }
+
+    public AuthenticationRequest(String username) {
+        this.username = username;
+        this.m = AuthenticationMethod.TRUST;
+        this.password = null;
+        this.requestRemember = false;
+        this.csr = null;
     }
 
     @Override
-    public Boolean processResponse(JSONObject response) {
-        return response.getString("status").equals("OK");
+    public AuthenticationResult processResponse(JSONObject response) {
+        Boolean success = response.getString("status").equals("OK");
+
+        X509Certificate cert, ca;
+        if(response.has("cert")) {
+            cert = SSLUtil.certFromBase64(response.getString("cert"));
+        } else {
+            cert = null;
+        }
+
+        if(response.has("ca")) {
+            ca = SSLUtil.certFromBase64(response.getString("ca"));
+        } else {
+            ca = null;
+        }
+
+        return new AuthenticationResult(cert, ca, success);
     }
 
     @Override
@@ -50,8 +91,17 @@ public class AuthenticationRequest extends Request<Boolean> {
         o.put("id", getRequestId());
         o.put("method", m.name());
         o.put("username", username);
-        if(m == AuthenticationMethod.PASSWORD)
+        if(m == AuthenticationMethod.PASSWORD) {
             o.put("password", password);
+            if(requestRemember) {
+                o.put("remember", true);
+                try {
+                    o.put("csr", Base64.encodeBase64String(csr.getEncoded()));
+                } catch(IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
 
         return o.toString();
     }

@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.SocketException;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -46,12 +48,12 @@ public class ClientMonitor implements Runnable {
     private PrintWriter out;
     private BufferedReader in;
 
-    public ClientMonitor(DataSource connections, StatementProvider stmts, ExecutorService workers, SSLSocket client) {
+    public ClientMonitor(PrivateKey k, X509Certificate c, DataSource connections, StatementProvider stmts, ExecutorService workers, SSLSocket client) {
         this.client = client;
         this.workers = workers;
         shutdown = false;
         authenticated = false;
-        dispatcher = new RequestDispatcher(this, connections, stmts, workers);
+        dispatcher = new RequestDispatcher(k, c, this, connections, stmts, workers);
     }
 
     @Override
