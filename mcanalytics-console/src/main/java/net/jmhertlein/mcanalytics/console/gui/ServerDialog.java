@@ -8,7 +8,7 @@ package net.jmhertlein.mcanalytics.console.gui;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import net.jmhertlein.mcanalytics.console.gui.FXMLDialog;
-import net.jmhertlein.mcanalytics.console.gui.HostPane;
+import net.jmhertlein.mcanalytics.console.gui.HostEntry;
 
 /**
  * FXML Controller class
@@ -26,7 +26,7 @@ public class ServerDialog extends FXMLDialog {
 
     @FXML
     public void onOK() {
-        this.setResult(new HostPane(nicknameField.getText(), hostnameField.getText(), Integer.parseInt(portField.getText())));
+        this.setResult(new HostEntry(nicknameField.getText(), hostnameField.getText(), Integer.parseInt(portField.getText())));
         this.close();
     }
 

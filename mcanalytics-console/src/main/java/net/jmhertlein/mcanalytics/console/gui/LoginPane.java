@@ -30,20 +30,15 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
@@ -56,6 +51,8 @@ import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
 import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
 import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * FXML Controller class
@@ -64,7 +61,7 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
  */
 public class LoginPane extends FXMLPane {
     @FXML
-    private Accordion serverList;
+    private ListView<HostEntry> hostList;
     @FXML
     private TextField usernameField;
     @FXML
@@ -76,35 +73,23 @@ public class LoginPane extends FXMLPane {
 
     private final KeyStore trust;
     private final MCAConsoleApplication app;
+    private final JSONObject config;
 
-    public LoginPane(MCAConsoleApplication app, KeyStore trust) {
+    public LoginPane(MCAConsoleApplication app, JSONObject config, KeyStore trust) {
         super("/fxml/LoginScene.fxml");
 
         this.trust = trust;
         this.app = app;
+        this.config = config;
 
-        serverList.getPanes().add(new HostPane("Josh's Test Server", "localhost", 35555));
+        hostList.setCellFactory(v -> new HostEntryCell());
 
-        for(TitledPane p : serverList.getPanes()) {
-            HostPane hp = (HostPane) p;
-
-            try {
-                if(trust.isCertificateEntry(hp.getUrl())) {
-                    //hp.setBackground(new Background(new BackgroundFill(Paint.valueOf("GREEN"), CornerRadii.EMPTY, Insets.EMPTY)));
-                    //System.out.println("set background for" + hp.getDisplayName());
-                }
-            } catch(KeyStoreException ex) {
-                Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        if(!serverList.getPanes().isEmpty())
-            serverList.setExpandedPane(serverList.getPanes().get(0));
+        loadHostPanes(config);
     }
 
     @FXML
     public void onLoginButtonPressed(ActionEvent event) {
-        HostPane selected = (HostPane) serverList.getExpandedPane();
+        HostEntry selected = hostList.getSelectionModel().getSelectedItem();
         if(selected == null)
             return;
 
@@ -194,23 +179,48 @@ public class LoginPane extends FXMLPane {
     @FXML
     public void addNewServer(ActionEvent event) {
         ServerDialog d = new ServerDialog();
-        HostPane p = (HostPane) d.showAndWait().get();
+        HostEntry h = (HostEntry) d.showAndWait().get();
 
-        if(p != null) {
-            serverList.getPanes().add(p);
-            System.out.println("Added server: " + p.toString());
+        if(h != null) {
+            hostList.getItems().add(h);
+            config.getJSONArray("hosts").put(h.toJSON());
+            System.out.println("Added server: " + h.toString());
         } else {
             System.out.println("Didn't add server?");
         }
     }
 
     @FXML
-    public void editServer(ActionEvent event) {
+    public void deleteServer(ActionEvent event) {
+        HostEntry remove = hostList.getItems().remove(hostList.getSelectionModel().getSelectedIndex());
 
+        try {
+            trust.deleteEntry(remove.getUrl());
+            trust.deleteEntry(remove.getUrl() + "-private");
+        } catch(KeyStoreException ex) {
+            Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        config.put("hosts", hostList.getItems().stream().map(entry -> entry.toJSON()).collect(Collectors.toList()));
     }
 
-    @FXML
-    public void deleteServer(ActionEvent event) {
+    private void loadHostPanes(JSONObject config) {
 
+        if(config.has("hosts")) {
+            JSONArray hosts = config.getJSONArray("hosts");
+            for(int i = 0; i < hosts.length(); i++) {
+                JSONObject host = hosts.getJSONObject(i);
+                HostEntry entry = HostEntry.fromJSON(host);
+                try {
+                    entry.setHasCert(trust.containsAlias(entry.getUrl() + "-private"));
+                } catch(KeyStoreException ex) {
+                    Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                hostList.getItems().add(entry);
+            }
+        }
+
+        if(!hostList.getItems().isEmpty())
+            hostList.getSelectionModel().select(0);
     }
 }

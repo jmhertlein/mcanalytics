@@ -16,28 +16,35 @@
  */
 package net.jmhertlein.mcanalytics.console.gui;
 
-import javafx.scene.control.Label;
-import javafx.scene.control.TitledPane;
+import org.json.JSONObject;
 
 /**
  *
  * @author joshua
  */
-public class HostPane extends TitledPane {
+public class HostEntry {
     private final String displayName, url;
     private final int port;
+    private boolean hasCert;
 
-    public HostPane(String displayName, String url, int port) {
+    public HostEntry(String displayName, String url, int port) {
         this.displayName = displayName;
         this.url = url;
         this.port = port;
 
-        this.setText(displayName);
-        this.setContent(new Label(url + ":" + port));
+        hasCert = false;
     }
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public boolean hasCert() {
+        return hasCert;
+    }
+
+    public void setHasCert(boolean hasCert) {
+        this.hasCert = hasCert;
     }
 
     public String getUrl() {
@@ -53,4 +60,15 @@ public class HostPane extends TitledPane {
         return displayName;
     }
 
+    public static HostEntry fromJSON(JSONObject host) {
+        return new HostEntry(host.getString("nick"), host.getString("url"), host.getInt("port"));
+    }
+
+    public JSONObject toJSON() {
+        JSONObject ret = new JSONObject();
+        ret.put("nick", displayName);
+        ret.put("url", url);
+        ret.put("port", port);
+        return ret;
+    }
 }
