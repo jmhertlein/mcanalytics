@@ -36,6 +36,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -83,6 +84,11 @@ public class LoginPane extends FXMLPane {
         this.config = config;
 
         hostList.setCellFactory(v -> new HostEntryCell());
+        hostList.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
+            usernameField.setDisable(n.hasCert());
+            passwordField.setDisable(n.hasCert());
+            rememberLoginBox.setDisable(n.hasCert());
+        });
 
         loadHostPanes(config);
     }
@@ -155,24 +161,36 @@ public class LoginPane extends FXMLPane {
                         trust.setKeyEntry(selected.getUrl() + "-private", newPair.getPrivate(), new char[0], new Certificate[]{login.get().getCert(), login.get().getCA()});
                         System.out.println("Stored a trusted cert from server.");
                     }
-                } else
+                } else {
                     System.out.println("Login failed.");
-            } catch(InterruptedException | ExecutionException ex) {
+                    Dialog dlg = new Dialog();
+                    dlg.setTitle("Login Failed");
+                    dlg.setContentText("Could not login- invalid login credentials.");
+                    dlg.showAndWait();
+                    return;
+                }
+            } catch(InterruptedException | ExecutionException | KeyStoreException ex) {
                 Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+                Dialog dlg = new Dialog();
+                dlg.setTitle("Connection Error");
+                dlg.setContentText(ex.getMessage());
+                dlg.showAndWait();
                 System.out.println("Login error.");
-            } catch(KeyStoreException ex) {
-                Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Login OK but error storing cert.");
+                return;
             }
             //auth done
 
             Stage window = (Stage) loginButton.getScene().getWindow();
             window.setScene(new Scene(new ChartPane(sock)));
             window.show();
-        } catch(IOException ex) {
+        } catch(IOException | KeyStoreException ex) {
             Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
-        } catch(KeyStoreException ex) {
-            Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
+            Dialog dlg = new Dialog();
+            dlg.setTitle("Connection Error");
+            dlg.setContentText(ex.getMessage());
+            dlg.showAndWait();
+            System.out.println("Login error.");
+            return;
         }
     }
 
