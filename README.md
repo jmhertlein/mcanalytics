@@ -72,3 +72,13 @@ GPLv3
 # Contributing
 
 Pull requests, bug reports, etc are welcome. Use the GitHub issues page.
+
+# Tech Highlights
+
+This is the part where I draw your attention to things you wouldn't immediately notice but took me long enough to get down that I'm making a point of showing them off.
+
+* Uses TLS to encrypt network comms
+* The "remember login" checkbox submits a CSR to the server, which signs it and sends it back. This is then used to log you in. This took way more tweaking to get working reliably than you would probably first expect. Enough tweaking that I'm mentioning it here.
+* Uses FXML for the UI
+* Uses my own `reflective` command framework. Plenty of reflection magic there. Hence the name.
+
