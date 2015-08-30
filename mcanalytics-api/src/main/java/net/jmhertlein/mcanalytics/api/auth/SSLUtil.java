@@ -183,6 +183,7 @@ public class SSLUtil {
             ret = g.generateKeyPair();
         } catch(NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException ex) {
             Logger.getLogger(SSLUtil.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace(System.err);
             ret = null;
         }
 
@@ -253,7 +254,7 @@ public class SSLUtil {
     public static KeyStore newKeyStore() {
         KeyStore store;
         try {
-            store = KeyStore.getInstance(KeyStore.getDefaultType());
+            store = KeyStore.getInstance("BKS");
             store.load(null, null);
             return store;
         } catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException ex) {
@@ -289,9 +290,10 @@ public class SSLUtil {
 
     public static X500Name newX500Name(String commonName, String orgName, String ouName) {
         X500NameBuilder b = new X500NameBuilder(BCStyle.INSTANCE);
-        b.addRDN(BCStyle.O, orgName);
-        b.addRDN(BCStyle.OU, ouName);
         b.addRDN(BCStyle.CN, commonName);
+        b.addRDN(BCStyle.OU, ouName);
+        b.addRDN(BCStyle.O, orgName);
+
         return b.build();
     }
 

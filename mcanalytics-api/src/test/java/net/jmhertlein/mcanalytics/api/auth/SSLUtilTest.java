@@ -16,11 +16,10 @@
  */
 package net.jmhertlein.mcanalytics.api.auth;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -30,6 +29,7 @@ import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.logging.Level;
@@ -41,6 +41,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
 
 /**
  *
@@ -49,11 +50,12 @@ import static org.junit.Assert.*;
 public class SSLUtilTest {
 
     public SSLUtilTest() {
+        Security.addProvider(new BouncyCastleProvider());
+        System.out.println("Added BC provider");
     }
 
     @Test
     public void trustTest() throws KeyStoreException, IOException {
-        Security.addProvider(new BouncyCastleProvider());
         KeyPair server = SSLUtil.newECDSAKeyPair();
         KeyPair client = SSLUtil.newECDSAKeyPair();
 
@@ -100,7 +102,7 @@ public class SSLUtilTest {
         sslServer.setUseClientMode(false);
 
         SSLSocket sslClient = (SSLSocket) clientCtx.getSocketFactory().createSocket();
-        //sslClient.setWantClientAuth(true);
+        sslClient.setWantClientAuth(true);
 
         sslServer.bind(new InetSocketAddress(33333));
 
@@ -117,10 +119,12 @@ public class SSLUtilTest {
                         System.out.println(c.toString());
                         System.out.println("----------------------------");
                     }
+                    assertTrue(cl.getSession().getPeerCertificates().length > 0);
                     System.out.println("Closing...");
                     cl.close();
                 } catch(IOException ex) {
                     System.out.println("Got here.");
+                    ex.printStackTrace(System.err);
                     Logger.getLogger(SSLUtilTest.class.getName()).log(Level.SEVERE, null, ex);
                     fail();
                 }
@@ -131,5 +135,39 @@ public class SSLUtilTest {
 
         sslClient.connect(new InetSocketAddress("localhost", 33333));
         sslClient.startHandshake();
+        
+        try {
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            Logger.getLogger(SSLUtilTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    @Test
+    public void serializationTest() throws CertificateEncodingException, KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+        KeyPair pair = SSLUtil.newECDSAKeyPair();
+        X509Certificate cert = SSLUtil.newSelfSignedCertificate(pair, SSLUtil.newX500Name("Tom Riddle", "Hogwarts", "British Magical Schools"), true);
+        
+        KeyStore store = SSLUtil.newKeyStore();
+        store.setCertificateEntry("cert", cert);
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        store.store(out, new char[0]);
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        
+        KeyStore loaded = SSLUtil.newKeyStore();
+        loaded.load(in, new char[0]);
+        
+        X509Certificate loadedCert = (X509Certificate) loaded.getCertificate("cert");
+        
+        System.out.println("----------------OLD------------");
+        System.out.println(cert.toString());
+        System.out.println("----------------NEW-----------");
+        System.out.println(loadedCert.toString());
+        System.out.println("----------------------------");
+        
+        assertEquals(cert, loadedCert);
+        
     }
 }
