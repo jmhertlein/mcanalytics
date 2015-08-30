@@ -42,7 +42,7 @@ public class MCAConsoleApplication extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
+        Security.insertProviderAt(new BouncyCastleProvider(), 1);
 
         DATA_PATH.toFile().mkdirs();
 

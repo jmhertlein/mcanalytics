@@ -254,7 +254,7 @@ public class SSLUtil {
     public static KeyStore newKeyStore() {
         KeyStore store;
         try {
-            store = KeyStore.getInstance("BKS");
+            store = KeyStore.getInstance(KeyStore.getDefaultType());
             store.load(null, null);
             return store;
         } catch(KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException ex) {

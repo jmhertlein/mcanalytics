@@ -56,7 +56,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Security.addProvider(new BouncyCastleProvider());
+        Security.insertProviderAt(new BouncyCastleProvider(), 1); // 1 is highest priority position
         saveDefaultConfig();
 
         try {

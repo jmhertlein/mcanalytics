@@ -41,7 +41,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Before;
 
 /**
  *
@@ -50,7 +49,7 @@ import org.junit.Before;
 public class SSLUtilTest {
 
     public SSLUtilTest() {
-        Security.addProvider(new BouncyCastleProvider());
+        Security.insertProviderAt(new BouncyCastleProvider(), 1);
         System.out.println("Added BC provider");
     }
 
@@ -135,39 +134,40 @@ public class SSLUtilTest {
 
         sslClient.connect(new InetSocketAddress("localhost", 33333));
         sslClient.startHandshake();
-        
+
         try {
             Thread.sleep(1000);
         } catch(InterruptedException ex) {
             Logger.getLogger(SSLUtilTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Test
     public void serializationTest() throws CertificateEncodingException, KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
         KeyPair pair = SSLUtil.newECDSAKeyPair();
         X509Certificate cert = SSLUtil.newSelfSignedCertificate(pair, SSLUtil.newX500Name("Tom Riddle", "Hogwarts", "British Magical Schools"), true);
-        
+
         KeyStore store = SSLUtil.newKeyStore();
         store.setCertificateEntry("cert", cert);
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         store.store(out, new char[0]);
-        
+
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        
+
         KeyStore loaded = SSLUtil.newKeyStore();
         loaded.load(in, new char[0]);
-        
+
         X509Certificate loadedCert = (X509Certificate) loaded.getCertificate("cert");
-        
+
         System.out.println("----------------OLD------------");
         System.out.println(cert.toString());
         System.out.println("----------------NEW-----------");
         System.out.println(loadedCert.toString());
         System.out.println("----------------------------");
-        
+
         assertEquals(cert, loadedCert);
-        
+        assertEquals(cert.toString(), loadedCert.toString());
+
     }
 }
