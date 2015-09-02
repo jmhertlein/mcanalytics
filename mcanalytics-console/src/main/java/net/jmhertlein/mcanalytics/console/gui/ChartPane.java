@@ -225,4 +225,8 @@ public class ChartPane extends FXMLPane {
         else
             scroll(xAxis, e.getDeltaY() > 0 ? 1 : -1);
     }
+
+    private void onChangePassword() {
+
+    }
 }
