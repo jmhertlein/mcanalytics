@@ -110,7 +110,7 @@ public class ChartPane extends FXMLPane {
 
         LinkedHashMap<LocalDateTime, Integer> counts = requestResult.get();
 
-        mungeDataToSquareLines(counts);
+        //mungeDataToSquareLines(counts);
 
         XYChart.Series<Date, Number> series = new XYChart.Series<>();
         for(Map.Entry<LocalDateTime, Integer> e : counts.entrySet()) {
