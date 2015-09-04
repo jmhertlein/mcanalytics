@@ -16,7 +16,6 @@
  */
 package net.jmhertlein.mcanalytics.plugin;
 
-import com.sun.media.jfxmedia.logging.Logger;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +66,7 @@ public class StatementProvider {
             }
 
             if(src == null)
-                Logger.logMsg(Logger.ERROR, "Unable to find statement \"" + sqlString.name() + "\" for backend type \"" + db.toString() + "\".");
+                System.err.println("Unable to find statement \"" + sqlString.name() + "\" for backend type \"" + db.toString() + "\".");
             else
                 stmts.put(sqlString, cat(src));
         }
