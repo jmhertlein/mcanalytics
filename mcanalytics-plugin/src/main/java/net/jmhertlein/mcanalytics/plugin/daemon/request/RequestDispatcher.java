@@ -91,6 +91,9 @@ public class RequestDispatcher {
             case NEW_PLAYER_LOGINS:
                 ret = new FirstJoinRequestHandler(connections, stmts, this, job);
                 break;
+            case UNIQUE_LOGINS_PER_DAY:
+                ret = new UniqueLoginsPerDayRequestHandler(connections, stmts, this, job);
+                break;
             default:
                 ret = null;
                 //System.out.println("INVALID JOB");

@@ -47,6 +47,7 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerCountLoginListener(PlayerJoinEvent e) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new WritePlayerCountTask(plugin));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new WriteLoginTask(e.getPlayer(), plugin));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

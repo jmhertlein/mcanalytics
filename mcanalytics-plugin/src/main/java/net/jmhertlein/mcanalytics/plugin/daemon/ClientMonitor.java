@@ -97,7 +97,7 @@ public class ClientMonitor implements Runnable {
                 synchronized(queue) {
                     try {
                         queue.wait();
-                        //System.out.println("CL-WRITE: Got something to write!");
+                        System.out.println("CL-WRITE: Got something to write!");
                     } catch(InterruptedException ex) {
                     }
                 }
@@ -130,7 +130,7 @@ public class ClientMonitor implements Runnable {
                     return;
                 }
                 o = new JSONObject(s);
-                System.out.println("Got a request.");
+                //System.out.println("Got a request.");
             } catch(SocketException | EOFException se) {
                 return;
             } catch(IOException ex) {
@@ -142,7 +142,7 @@ public class ClientMonitor implements Runnable {
                 continue;
             }
             dispatcher.submitJob(o);
-            System.out.println("Submitted job, returning to read loop.");
+            //System.out.println("Submitted job, returning to read loop.");
         }
     }
 

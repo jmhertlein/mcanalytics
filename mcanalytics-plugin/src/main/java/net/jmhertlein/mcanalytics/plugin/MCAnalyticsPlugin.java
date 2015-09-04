@@ -127,6 +127,7 @@ public class MCAnalyticsPlugin extends JavaPlugin {
             s.execute(stmts.get(SQLString.CREATE_HOURLY_PLAYER_COUNT));
             s.execute(stmts.get(SQLString.CREATE_NEW_PLAYER_LOGIN));
             s.execute(stmts.get(SQLString.CREATE_PASSWORD_TABLE));
+            s.execute(stmts.get(SQLString.CREATE_PLAYER_LOGIN));
         }
     }
 

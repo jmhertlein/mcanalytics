@@ -25,7 +25,8 @@ public enum RequestType {
     PAST_ONLINE_PLAYER_COUNT,
     AUTHENTICATION,
     PASSWORD_RESET,
-    NEW_PLAYER_LOGINS;
+    NEW_PLAYER_LOGINS,
+    UNIQUE_LOGINS_PER_DAY;
 
     @Override
     public String toString() {

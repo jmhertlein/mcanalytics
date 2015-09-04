@@ -46,6 +46,7 @@ import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.FutureRequest;
 import net.jmhertlein.mcanalytics.api.request.NewPlayerLoginsRequest;
 import net.jmhertlein.mcanalytics.api.request.PastOnlinePlayerCountRequest;
+import net.jmhertlein.mcanalytics.api.request.UniqueLoginsPerDayRequest;
 import net.jmhertlein.mcanalytics.console.ChartType;
 import net.jmhertlein.mcanalytics.console.DateAxis;
 import net.jmhertlein.mcanalytics.console.TimeUtils;
@@ -90,6 +91,9 @@ public class ChartPane extends FXMLPane {
             switch(type) {
                 case ONLINE_PLAYERS:
                     handleOnlinePlayersChart();
+                    break;
+                case UNIQUE_LOGINS:
+                    handleUniqueLoginsChart();
                     break;
                 default:
                     System.out.println("I FORGOT TO PUT A CASE FOR " + type.name());
@@ -228,5 +232,40 @@ public class ChartPane extends FXMLPane {
     private void onChangePassword() {
         PasswordResetDialog dlg = new PasswordResetDialog(username, sock);
         dlg.showAndWait();
+    }
+
+    private void handleUniqueLoginsChart() throws IOException, InterruptedException, ExecutionException {
+        final LocalDate start = startDatePicker.getValue();
+        final LocalDate end = endDatePicker.getValue().plusDays(1);
+        FutureRequest<Map<LocalDate, Integer>> requestResult = sock.submit(new UniqueLoginsPerDayRequest(
+                start, end));
+
+        Map<LocalDate, Integer> uniqueLogins = requestResult.get();
+
+        LocalDate c = start;
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        while(c.isBefore(end)) {
+            if(uniqueLogins.containsKey(c)) {
+                series.getData().add(new XYChart.Data(c.toString(), uniqueLogins.get(c)));
+            } else {
+                series.getData().add(new XYChart.Data(c.toString(), 0));
+            }
+            c = c.plusDays(1);
+        }
+        
+        series.setName("Unique Logins per Day");
+        final CategoryAxis xAxis = new CategoryAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Day");
+        yAxis.setLabel("Unique Logins");
+        yAxis.setTickLength(5);
+        yAxis.setMinorTickLength(1);
+        xAxis.setAutoRanging(true);
+        final BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+        barChart.setTitle("New Players");
+        barChart.getData().add(series);
+
+        chartPane.setCenter(barChart);
+        chartPane.layout();
     }
 }

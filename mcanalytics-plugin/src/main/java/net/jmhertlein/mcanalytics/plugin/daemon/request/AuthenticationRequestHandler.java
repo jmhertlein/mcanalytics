@@ -81,7 +81,7 @@ public class AuthenticationRequestHandler extends RequestHandler {
         } else if(m == AuthenticationMethod.TRUST) {
             success = SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).contains(username);
             //System.out.println("Username is " + username + " and CNs in received certs are:");
-            SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).stream().forEach(s -> System.out.println(s));
+            //SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).stream().forEach(s -> System.out.println(s));
         } else {
             throw new Exception("Invalid authentication method.");
         }
