@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.jmhertlein.mcanalytics.api.APISocket;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
@@ -43,6 +44,8 @@ public class MCAConsoleApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Security.insertProviderAt(new BouncyCastleProvider(), 1);
+        
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/images/icon.png")));
 
         DATA_PATH.toFile().mkdirs();
 
