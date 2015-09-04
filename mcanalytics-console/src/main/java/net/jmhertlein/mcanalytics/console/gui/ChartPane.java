@@ -88,10 +88,6 @@ public class ChartPane extends FXMLPane {
 
         try {
             switch(type) {
-                case BOUNCED_LOGINS:
-                case NEW_PLAYER_LOGINS:
-                    handleFirstLoginsChart();
-                    break;
                 case ONLINE_PLAYERS:
                     handleOnlinePlayersChart();
                     break;
