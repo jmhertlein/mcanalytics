@@ -50,6 +50,7 @@ import net.jmhertlein.mcanalytics.api.auth.AuthenticationResult;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
 import net.jmhertlein.mcanalytics.api.auth.UntrustedCertificateException;
 import net.jmhertlein.mcanalytics.api.request.AuthenticationRequest;
+import net.jmhertlein.mcanalytics.console.Dialogs;
 import net.jmhertlein.mcanalytics.console.MCAConsoleApplication;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.json.JSONArray;
@@ -137,19 +138,22 @@ public class LoginPane extends FXMLPane {
 
             System.out.println("Has cert: " + hasCert);
             KeyPair newPair = null;
+            String username;
 
             if(hasCert) {
-                String cn = SSLUtil.getCNs((X509Certificate) trust.getCertificate(selected.getUrl())).iterator().next();
-                login = sock.submit(new AuthenticationRequest(cn));
-                System.out.println("Logging in w/ cert. CN: " + cn + ", URL: " + selected.getUrl());
+                username = SSLUtil.getCNs((X509Certificate) trust.getCertificate(selected.getUrl())).iterator().next();
+                login = sock.submit(new AuthenticationRequest(username));
+                System.out.println("Logging in w/ cert. CN: " + username + ", URL: " + selected.getUrl());
             } else if(rememberLoginBox.isSelected()) {
                 newPair = SSLUtil.newECDSAKeyPair();
-                PKCS10CertificationRequest csr = SSLUtil.newCertificateRequest(SSLUtil.newX500Name(usernameField.getText(), selected.getUrl(), "mcanalytics"), newPair);
+                username = usernameField.getText();
+                PKCS10CertificationRequest csr = SSLUtil.newCertificateRequest(SSLUtil.newX500Name(username, selected.getUrl(), "mcanalytics"), newPair);
                 login = sock.submit(new AuthenticationRequest(usernameField.getText(), passwordField.getText(), csr));
                 System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText() + " and requesting a cert.");
             } else {
-                login = sock.submit(new AuthenticationRequest(usernameField.getText(), passwordField.getText()));
-                System.out.println("Logging in with: " + usernameField.getText() + " + " + passwordField.getText());
+                username = usernameField.getText();
+                login = sock.submit(new AuthenticationRequest(username, passwordField.getText()));
+                System.out.println("Logging in with: " + username + " + " + passwordField.getText());
             }
 
             try {
@@ -171,17 +175,14 @@ public class LoginPane extends FXMLPane {
                 }
             } catch(InterruptedException | ExecutionException | KeyStoreException ex) {
                 Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);
-                Dialog dlg = new Dialog();
-                dlg.setTitle("Connection Error");
-                dlg.setContentText(ex.getMessage());
-                dlg.showAndWait();
+                Dialogs.showMessage("Connection Error", "Connection Error", ex.getMessage(), ex.toString());
                 System.out.println("Login error.");
                 return;
             }
             //auth done
 
             Stage window = (Stage) loginButton.getScene().getWindow();
-            window.setScene(new Scene(new ChartPane(sock)));
+            window.setScene(new Scene(new ChartPane(username, sock)));
             window.show();
         } catch(IOException | KeyStoreException ex) {
             Logger.getLogger(LoginPane.class.getName()).log(Level.SEVERE, null, ex);

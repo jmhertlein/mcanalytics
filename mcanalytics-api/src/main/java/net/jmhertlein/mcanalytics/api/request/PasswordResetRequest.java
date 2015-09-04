@@ -24,7 +24,13 @@ import org.json.JSONObject;
  * @author joshua
  */
 public class PasswordResetRequest extends Request<Boolean> {
-    private String newPass, oldPass, username;
+    private final String newPass, oldPass, username;
+
+    public PasswordResetRequest(String newPass, String oldPass, String username) {
+        this.newPass = newPass;
+        this.oldPass = oldPass;
+        this.username = username;
+    }
 
     @Override
     public String toJSON() {

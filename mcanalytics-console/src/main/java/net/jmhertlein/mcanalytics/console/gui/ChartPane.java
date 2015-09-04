@@ -57,6 +57,7 @@ import net.jmhertlein.mcanalytics.console.TimeUtils;
  */
 public class ChartPane extends FXMLPane {
     private final APISocket sock;
+    private final String username;
 
     @FXML
     private ChoiceBox<ChartType> chartChooser;
@@ -67,10 +68,11 @@ public class ChartPane extends FXMLPane {
     @FXML
     private DatePicker endDatePicker;
 
-    public ChartPane(APISocket s) {
+    public ChartPane(String username, APISocket s) {
         super("/fxml/ChartScene.fxml");
 
         sock = s;
+        this.username = username;
         chartChooser.setItems(FXCollections.observableArrayList(ChartType.values()));
         chartChooser.setValue(ChartType.ONLINE_PLAYERS);
 
@@ -226,7 +228,9 @@ public class ChartPane extends FXMLPane {
             scroll(xAxis, e.getDeltaY() > 0 ? 1 : -1);
     }
 
+    @FXML
     private void onChangePassword() {
-
+        PasswordResetDialog dlg = new PasswordResetDialog(username, sock);
+        dlg.showAndWait();
     }
 }
