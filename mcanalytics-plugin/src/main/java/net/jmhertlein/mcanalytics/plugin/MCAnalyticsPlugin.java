@@ -152,17 +152,17 @@ public class MCAnalyticsPlugin extends JavaPlugin {
         if(source.exists()) {
             try(FileInputStream fis = new FileInputStream(source)) {
                 trustMaterial.load(fis, new char[0]);
-                getLogger().info("Loaded JKS.");
-                getLogger().info("Size: " + trustMaterial.size());
-            } catch(IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException ex) {
+                //getLogger().info("Loaded JKS.");
+                //getLogger().info("Size: " + trustMaterial.size());
+            } catch(IOException | NoSuchAlgorithmException | CertificateException ex) {
                 Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            getLogger().info("No keystore found, re-initializing.");
+            //getLogger().info("No keystore found, re-initializing.");
             populateWithTrustMaterial(trustMaterial);
             try(FileOutputStream fos = new FileOutputStream(source)) {
                 trustMaterial.store(fos, new char[0]);
-                getLogger().info("Saved new store to disk.");
+                //getLogger().info("Saved new store to disk.");
             } catch(IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException ex) {
                 Logger.getLogger(MCAnalyticsPlugin.class.getName()).log(Level.SEVERE, null, ex);
             }

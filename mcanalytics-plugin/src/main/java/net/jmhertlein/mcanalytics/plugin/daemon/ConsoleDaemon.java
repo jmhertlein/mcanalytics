@@ -96,10 +96,10 @@ public class ConsoleDaemon {
                 client = (SSLSocket) s.accept();
                 client.startHandshake();
             } catch(SSLHandshakeException sslhe) {
-                System.err.println("Client dropped: " + sslhe.getLocalizedMessage());
+                //System.err.println("Client dropped: " + sslhe.getLocalizedMessage());
                 continue;
             } catch(SocketException ex) {
-                System.out.println("Server port listen socket closed: " + ex.getLocalizedMessage());
+                //System.out.println("Server port listen socket closed: " + ex.getLocalizedMessage());
                 return;
             } catch(IOException ex) {
                 Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
@@ -130,9 +130,9 @@ public class ConsoleDaemon {
         }
 
         try {
-            System.out.println("Daemon going for shutdown, waiting for workers to die...");
-            workers.awaitTermination(30, TimeUnit.SECONDS);
-            System.out.println("Timed out or stopped.");
+            //System.out.println("Daemon going for shutdown, waiting for workers to die...");
+            workers.awaitTermination(3, TimeUnit.SECONDS);
+            //System.out.println("Timed out or stopped.");
         } catch(InterruptedException ex) {
             Logger.getLogger(ConsoleDaemon.class.getName()).log(Level.SEVERE, null, ex);
         }

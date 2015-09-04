@@ -23,14 +23,13 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  *
  * @author joshua
  */
-public abstract class WriteTask extends BukkitRunnable {
-    private final MCAnalyticsPlugin p;
+public abstract class WriteTask implements Runnable {
+    protected final MCAnalyticsPlugin p;
     private final DataSource ds;
     private final StatementProvider stmts;
 

@@ -41,7 +41,7 @@ public class FirstJoinRequestHandler extends RequestHandler {
 
     @Override
     public JSONObject handle(Connection conn, StatementProvider stmts, JSONObject request, ClientMonitor client) throws Exception {
-        System.out.println("Handler: starting...");
+        //System.out.println("Handler: starting...");
         PreparedStatement stmt = conn.prepareStatement(stmts.get(SQLString.GET_NEW_PLAYER_LOGINS_HOURLY));
 
         stmt.clearParameters();
@@ -58,7 +58,7 @@ public class FirstJoinRequestHandler extends RequestHandler {
         ret.put("first_login_counts", counts);
         res.close();
         stmt.close();
-        System.out.println("Handler: done, returning.");
+        //System.out.println("Handler: done, returning.");
         return ret;
     }
 

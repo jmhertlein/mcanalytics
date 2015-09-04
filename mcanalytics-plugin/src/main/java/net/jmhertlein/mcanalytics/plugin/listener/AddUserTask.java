@@ -29,16 +29,21 @@ import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
 import org.apache.commons.codec.binary.Base64;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 
 /**
  *
  * @author joshua
  */
 public class AddUserTask extends WriteTask {
+    private final CommandSender sender;
     private final String username, password;
 
-    public AddUserTask(String username, String password, MCAnalyticsPlugin p) {
+    public AddUserTask(CommandSender s, String username, String password, MCAnalyticsPlugin p) {
         super(p);
+        this.sender = s;
         this.username = username;
         this.password = password;
     }
@@ -67,7 +72,18 @@ public class AddUserTask extends WriteTask {
             addUser.setString(2, Base64.encodeBase64String(hash));
             addUser.setString(3, Base64.encodeBase64String(salt));
             addUser.executeUpdate();
+        } catch(SQLException ex) {
+            Bukkit.getScheduler().callSyncMethod(p, () -> {
+                sender.sendMessage(ChatColor.RED + "Error adding player: " + ex.getMessage());
+                return null;
+            });
+            throw ex;
         }
+        
+        Bukkit.getScheduler().callSyncMethod(p, () -> {
+                sender.sendMessage(ChatColor.GREEN + "Player added.");
+                return null;
+            });
     }
 
 }

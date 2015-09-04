@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 import javax.sql.DataSource;
 import net.jmhertlein.mcanalytics.api.auth.AuthenticationMethod;
 import net.jmhertlein.mcanalytics.api.auth.SSLUtil;
@@ -72,7 +71,7 @@ public class AuthenticationRequestHandler extends RequestHandler {
         AuthenticationMethod m = AuthenticationMethod.valueOf(request.getString("method"));
         String username = request.getString("username");
 
-        System.out.println("Auth method is " + m.name());
+        //System.out.println("Auth method is " + m.name());
 
         if(m == AuthenticationMethod.PASSWORD) {
             success = authenticateWithPassword(request, conn, stmts, username);
@@ -81,7 +80,7 @@ public class AuthenticationRequestHandler extends RequestHandler {
             }
         } else if(m == AuthenticationMethod.TRUST) {
             success = SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).contains(username);
-            System.out.println("Username is " + username + " and CNs in received certs are:");
+            //System.out.println("Username is " + username + " and CNs in received certs are:");
             SSLUtil.getCNs((X509Certificate) c.getSocket().getSession().getPeerCertificates()[0]).stream().forEach(s -> System.out.println(s));
         } else {
             throw new Exception("Invalid authentication method.");

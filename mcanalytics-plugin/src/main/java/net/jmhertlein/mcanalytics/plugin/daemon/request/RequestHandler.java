@@ -71,20 +71,20 @@ public abstract class RequestHandler implements Runnable {
     public final void run() {
         JSONObject o;
         try(Connection conn = ds.getConnection()) {
-            System.out.println("Handler method being called!");
+            //System.out.println("Handler method being called!");
             checkAuthentication();
             o = handle(conn, stmts, req, dispatcher.getClient());
-            System.out.println("Handler method returned.");
+            //System.out.println("Handler method returned.");
             o.put("status", "OK");
         } catch(Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             o = new JSONObject();
             o.put("status", "ERROR");
             o.put("status_msg", e.getLocalizedMessage());
         }
 
         o.put("response_to", getResponseID());
-        System.out.println("Queueing the response from handler.");
+        //System.out.println("Queueing the response from handler.");
         dispatcher.queueResponse(o);
     }
 

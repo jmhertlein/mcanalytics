@@ -97,21 +97,21 @@ public class ClientMonitor implements Runnable {
                 synchronized(queue) {
                     try {
                         queue.wait();
-                        System.out.println("CL-WRITE: Got something to write!");
+                        //System.out.println("CL-WRITE: Got something to write!");
                     } catch(InterruptedException ex) {
                     }
                 }
             } else {
                 String w = queue.remove().toString();
-                System.out.println("CL-WRITE: WRITING THIS:=======================");
-                System.out.println(w);
-                System.out.println("==============================================");
+                //System.out.println("CL-WRITE: WRITING THIS:=======================");
+                //System.out.println(w);
+                //System.out.println("==============================================");
                 out.println(w);
                 out.flush();
             }
         }
 
-        System.out.println("CL-WRITE: Exiting, turning off the lights...");
+        //System.out.println("CL-WRITE: Exiting, turning off the lights...");
         try {
             close();
         } catch(IOException ex) {
@@ -125,7 +125,7 @@ public class ClientMonitor implements Runnable {
             try {
                 String s = in.readLine();
                 if(s == null) {
-                    System.out.println("CL-READ: Exited due to suspected socket disconnect, turning off the lights....");
+                    //System.out.println("CL-READ: Exited due to suspected socket disconnect, turning off the lights....");
                     close();
                     return;
                 }
@@ -138,7 +138,7 @@ public class ClientMonitor implements Runnable {
                 continue;
             } catch(Throwable t) {
                 t.printStackTrace();
-                System.out.println(t.getLocalizedMessage());
+                //System.out.println(t.getLocalizedMessage());
                 continue;
             }
             dispatcher.submitJob(o);
@@ -156,17 +156,7 @@ public class ClientMonitor implements Runnable {
             synchronized(writeQueue) {
                 writeQueue.notifyAll();
             }
-            System.out.println("Client: All closed!");
+            //System.out.println("Client: All closed!");
         }
     }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            System.out.println("Client got gc'd!");
-        } finally {
-            super.finalize();
-        }
-    }
-
 }
