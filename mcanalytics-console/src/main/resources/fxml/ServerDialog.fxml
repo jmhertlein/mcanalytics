@@ -7,7 +7,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
 <fx:root type="javafx.scene.control.DialogPane" xmlns="http://javafx.com/javafx/8.0.45" xmlns:fx="http://javafx.com/fxml/1">
   <content>
     <VBox>
@@ -28,7 +27,7 @@
             <Label text="Port" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
             <TextField fx:id="nicknameField" GridPane.columnIndex="1" />
             <TextField fx:id="hostnameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <TextField fx:id="portField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <TextField fx:id="portField" text="35555" GridPane.columnIndex="1" GridPane.rowIndex="2" />
           </children>
         </GridPane>
         <BorderPane prefHeight="0.0" prefWidth="200.0">
