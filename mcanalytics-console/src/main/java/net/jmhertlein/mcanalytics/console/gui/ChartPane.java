@@ -262,7 +262,7 @@ public class ChartPane extends FXMLPane {
         yAxis.setMinorTickLength(1);
         xAxis.setAutoRanging(true);
         final BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("New Players");
+        barChart.setTitle("Unique Logins");
         barChart.getData().add(series);
 
         chartPane.setCenter(barChart);
