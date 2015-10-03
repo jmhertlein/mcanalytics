@@ -108,6 +108,41 @@
           </additionalClasspathElements>
         </configuration>
       </plugin>
+      <plugin>
+          <groupId>com.akathist.maven.plugins.launch4j</groupId>
+          <artifactId>launch4j-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>l4j-clui</id>
+              <phase>package</phase>
+              <goals><goal>launch4j</goal></goals>
+              <configuration>
+                <headerType>gui</headerType>
+                <outfile>target/mcanalytics.exe</outfile>
+                <errTitle>MCAnalytics</errTitle>
+                <classPath>
+                  <mainClass>net.jmhertlein.mcanalytics.console.MCAConsoleApplication</mainClass>
+                  <addDependencies>false</addDependencies>
+                  <preCp>anything</preCp>
+                </classPath>
+                <jre>
+                  <minVersion>1.8.0</minVersion>
+                </jre>
+                <versionInfo>
+                  <fileVersion>1.0.0.0</fileVersion>
+                  <txtFileVersion>1.0.0.0</txtFileVersion>
+                  <fileDescription>MCAnalytics - Windows Wrapper</fileDescription>
+                  <copyright>Copyright 2015 Joshua Hertlein - GPLv3+</copyright>
+                  <productVersion>1.0.0.0</productVersion>
+                  <txtProductVersion>1.0.0.0</txtProductVersion>
+                  <productName>MCAnalytics</productName>
+                  <internalName>mcanalytics</internalName>
+                  <originalFilename>mcanalytics.exe</originalFilename>
+                </versionInfo>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
     </plugins>
   </build>
   <dependencies>
