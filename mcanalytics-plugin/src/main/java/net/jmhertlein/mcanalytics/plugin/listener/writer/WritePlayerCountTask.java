@@ -14,43 +14,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.listener;
+package net.jmhertlein.mcanalytics.plugin.listener.writer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
 
 /**
  *
  * @author joshua
  */
-public class WriteFirstLoginTask extends WriteTask {
-    private LocalDateTime loginTime;
-    private UUID id;
-    private String name;
+public class WritePlayerCountTask extends WriteTask {
+    private final int players;
+    private final LocalDateTime instant;
 
-    public WriteFirstLoginTask(Player pl, MCAnalyticsPlugin p) {
+    public WritePlayerCountTask(MCAnalyticsPlugin p) {
         super(p);
-        loginTime = LocalDateTime.now();
-        id = pl.getUniqueId();
-        name = pl.getName();
+        players = Bukkit.getOnlinePlayers().size();
+        instant = LocalDateTime.now();
+    }
+
+    public WritePlayerCountTask(MCAnalyticsPlugin p, int count) {
+        super(p);
+        players = count;
+        instant = LocalDateTime.now();
     }
 
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
-        try(PreparedStatement p = c.prepareStatement(stmts.get(SQLString.ADD_NEW_PLAYER_LOGIN))) {
-            p.setTimestamp(1, Timestamp.valueOf(loginTime));
-            p.setString(2, id.toString());
-            p.setString(3, name);
-            p.execute();
+        try(PreparedStatement addNewCount = c.prepareStatement(stmts.get(SQLString.ADD_HOURLY_PLAYER_COUNT))) {
+            addNewCount.setTimestamp(1, Timestamp.valueOf(instant));
+            addNewCount.setInt(2, players);
+            addNewCount.execute();
         }
     }
-
 }

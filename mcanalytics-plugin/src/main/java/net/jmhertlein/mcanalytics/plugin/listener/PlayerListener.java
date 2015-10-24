@@ -16,11 +16,18 @@
  */
 package net.jmhertlein.mcanalytics.plugin.listener;
 
+import java.time.LocalDateTime;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.WritePlayerCountTask;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.WriteLoginTask;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.WriteBounceUpdateTask;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.WriteFirstLoginTask;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.WriteWorldChangeTask;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -53,5 +60,18 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerCountLogoutListener(PlayerQuitEvent e) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new WritePlayerCountTask(plugin, Bukkit.getOnlinePlayers().size() - 1));
+    }
+    
+    public void playerChangeWorldListener(PlayerChangedWorldEvent e) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new WriteWorldChangeTask(
+                LocalDateTime.now(), 
+                e.getFrom().getUID(), 
+                e.getPlayer().getWorld().getUID(), 
+                e.getFrom().getName(), 
+                e.getPlayer().getWorld().getName(), 
+                e.getPlayer().getUniqueId(), 
+                e.getPlayer().getName(),
+                plugin
+        ));
     }
 }

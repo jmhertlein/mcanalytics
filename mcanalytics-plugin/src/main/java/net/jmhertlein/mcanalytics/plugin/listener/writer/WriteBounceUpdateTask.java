@@ -14,44 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.listener;
+package net.jmhertlein.mcanalytics.plugin.listener.writer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.util.UUID;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
 /**
  *
  * @author joshua
  */
-public class WritePlayerCountTask extends WriteTask {
-    private final int players;
-    private final LocalDateTime instant;
+public class WriteBounceUpdateTask extends WriteTask {
+    private final UUID id;
 
-    public WritePlayerCountTask(MCAnalyticsPlugin p) {
+    public WriteBounceUpdateTask(MCAnalyticsPlugin p, OfflinePlayer player) {
         super(p);
-        players = Bukkit.getOnlinePlayers().size();
-        instant = LocalDateTime.now();
-    }
-
-    public WritePlayerCountTask(MCAnalyticsPlugin p, int count) {
-        super(p);
-        players = count;
-        instant = LocalDateTime.now();
+        id = player.getUniqueId();
     }
 
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
-        try(PreparedStatement addNewCount = c.prepareStatement(stmts.get(SQLString.ADD_HOURLY_PLAYER_COUNT))) {
-            addNewCount.setTimestamp(1, Timestamp.valueOf(instant));
-            addNewCount.setInt(2, players);
-            addNewCount.execute();
+        try(PreparedStatement updateBounced = c.prepareStatement(stmts.get(SQLString.UPDATE_BOUNCED_PLAYER))) {
+            updateBounced.setString(1, id.toString());
+            updateBounced.executeUpdate();
         }
     }
+
 }

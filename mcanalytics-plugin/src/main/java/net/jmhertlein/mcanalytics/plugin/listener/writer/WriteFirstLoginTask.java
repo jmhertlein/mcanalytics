@@ -14,34 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.jmhertlein.mcanalytics.plugin.listener;
+package net.jmhertlein.mcanalytics.plugin.listener.writer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import net.jmhertlein.mcanalytics.plugin.MCAnalyticsPlugin;
 import net.jmhertlein.mcanalytics.plugin.SQLString;
 import net.jmhertlein.mcanalytics.plugin.StatementProvider;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 /**
  *
  * @author joshua
  */
-public class WriteBounceUpdateTask extends WriteTask {
-    private final UUID id;
+public class WriteFirstLoginTask extends WriteTask {
+    private LocalDateTime loginTime;
+    private UUID id;
+    private String name;
 
-    public WriteBounceUpdateTask(MCAnalyticsPlugin p, OfflinePlayer player) {
+    public WriteFirstLoginTask(Player pl, MCAnalyticsPlugin p) {
         super(p);
-        id = player.getUniqueId();
+        loginTime = LocalDateTime.now();
+        id = pl.getUniqueId();
+        name = pl.getName();
     }
 
     @Override
     protected void write(Connection c, StatementProvider stmts) throws SQLException {
-        try(PreparedStatement updateBounced = c.prepareStatement(stmts.get(SQLString.UPDATE_BOUNCED_PLAYER))) {
-            updateBounced.setString(1, id.toString());
-            updateBounced.executeUpdate();
+        try(PreparedStatement p = c.prepareStatement(stmts.get(SQLString.ADD_NEW_PLAYER_LOGIN))) {
+            p.setTimestamp(1, Timestamp.valueOf(loginTime));
+            p.setString(2, id.toString());
+            p.setString(3, name);
+            p.execute();
         }
     }
 

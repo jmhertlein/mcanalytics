@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.jmhertlein.mcanalytics.plugin.listener;
+package net.jmhertlein.mcanalytics.plugin.listener.writer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

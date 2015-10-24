@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.jmhertlein.mcanalytics.plugin.daemon.ClientMonitor;
-import net.jmhertlein.mcanalytics.plugin.listener.AddUserTask;
+import net.jmhertlein.mcanalytics.plugin.listener.writer.AddUserTask;
 import net.jmhertlein.reflective.CommandDefinition;
 import net.jmhertlein.reflective.annotation.CommandMethod;
 import org.bukkit.ChatColor;
