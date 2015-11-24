@@ -112,7 +112,7 @@
     </repository>
     <repository>
       <id>jmh-repo</id>
-      <url>http://maven.jmhertlein.net/</url>
+      <url>https://maven.jmhertlein.net/</url>
     </repository>
   </repositories>
   <properties>
